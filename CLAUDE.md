@@ -62,7 +62,8 @@ AI extraction will never be 100% accurate, and one missed deadline loses a user.
 
 ## Build stages
 Each stage ends working, tested, and committed.
-- [ ] **0. Setup:** accounts, empty project running locally
+- [x] **0. Setup:** accounts, empty project running locally
+      (Anthropic API key postponed to Stage 5)
 - [ ] **1. Feasibility checks:** throwaway scripts: sign in with a Trichy ID, fetch
       Classroom assignments, fetch the last 20 emails. Record exactly what works and
       what is blocked.
@@ -86,7 +87,15 @@ Each stage ends working, tested, and committed.
 ## Session log
 Update at the end of every session: what was finished, what's next.
 
-- _(empty: first session not started)_
+- 2026-10-05, session 1: **Stage 0 done.** Node.js 24 + Git set up; Next.js 16 app
+  `campus-hub` (TypeScript, Tailwind, App Router) runs locally via `npm run dev`;
+  code on GitHub (saketben/campus-hub, private). Accounts: Vercel (team saketben),
+  Supabase (org saketben, no project yet, created in Stage 2), Google Cloud project
+  `campus-hub` (personal Gmail, 2-step on, no APIs or consent screen yet).
+  **Next:** Stage 1 feasibility checks: set up the OAuth consent screen (External,
+  test mode, read-only Classroom + Gmail scopes), then sign in with a Trichy ID, fetch
+  Classroom assignments, fetch the last 20 emails. Also ask IT about an Internal
+  project (see decision log).
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -103,3 +112,5 @@ This becomes interview material, so keep it honest.
   but needs IT to host it and approve Gmail access. Asking IT in parallel; switching
   later only means a new client ID.
 - 2026-10-05: Google Cloud now requires 2-step verification on the owner account.
+- 2026-10-05: Postponed the Anthropic API key to Stage 5: it costs money (billed
+  separately from a Claude subscription) and nothing before Stage 5 uses it.
