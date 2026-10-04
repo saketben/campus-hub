@@ -80,6 +80,8 @@ Each stage ends working, tested, and committed.
 - Never leave work half-finished at the end of a session.
 - Commit after every working step with a clear message.
 - Keep the UI simple; no features beyond the current stage unless I ask.
+- Mobile-first, responsive design. Every screen must work on a phone (around 390px wide)
+  and on a laptop. Test both before marking a step done.
 
 ## Session log
 Update at the end of every session: what was finished, what's next.
@@ -94,3 +96,10 @@ This becomes interview material, so keep it honest.
 - 2026-09-28: Classroom before Gmail: structured data builds user trust first.
 - 2026-09-28: Timetable blocked by download restriction; asking the academic office
   for a feed instead of working around it.
+- 2026-10-05: Google Cloud project owned by personal Gmail for now (External, test
+  mode). Surprise: External apps that aren't verified are capped at 100 users for good,
+  test-mode access expires every 7 days, and Gmail verification needs a paid yearly
+  audit. An "Internal" project in IIM Trichy's Google organization removes all three,
+  but needs IT to host it and approve Gmail access. Asking IT in parallel; switching
+  later only means a new client ID.
+- 2026-10-05: Google Cloud now requires 2-step verification on the owner account.
