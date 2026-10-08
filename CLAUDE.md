@@ -16,8 +16,10 @@ against that. If Google Tasks or Notion already does it well, we don't build it.
 Designed so it could later work for any student, and eventually for work tools.
 
 ## Sources (built in this order)
-1. **Google Classroom:** assignments, pre-reads (materials), announcements. Due dates are
-   structured, so no AI is needed here.
+1. **Google Classroom:** assignments, pre-reads (materials), announcements. Assignment
+   due dates are structured, so no AI is needed for assignments and materials.
+   Announcements hide deadlines in plain text, so they go through the same AI
+   extraction as emails (built in Stage 5). Due times arrive in UTC: show IST.
 2. **Timetable:** the batch schedule sheet. Status: the file is view-only with download
    restricted. Waiting on the academic office for a proper feed (published CSV, service
    account access, or a native Google Sheet). **Do not scrape, screenshot, or otherwise
@@ -64,15 +66,17 @@ AI extraction will never be 100% accurate, and one missed deadline loses a user.
 Each stage ends working, tested, and committed.
 - [x] **0. Setup:** accounts, empty project running locally
       (Anthropic API key postponed to Stage 5)
-- [ ] **1. Feasibility checks:** throwaway scripts: sign in with a Trichy ID, fetch
+- [x] **1. Feasibility checks:** throwaway scripts: sign in with a Trichy ID, fetch
       Classroom assignments, fetch the last 20 emails. Record exactly what works and
-      what is blocked.
+      what is blocked. (All passed: see feasibility/RESULTS.md)
 - [ ] **2. Skeleton:** Google sign-in, database, empty home page, deployed online
-- [ ] **3. Classroom:** sync job + Classroom section
+- [ ] **3. Classroom:** sync job + Classroom section (assignments and materials;
+      announcements wait for the Stage 5 AI step)
 - [ ] **4. Timetable:** parser + elective/group picker + "my classes tomorrow"
       (depends on the academic office)
-- [ ] **5. Gmail:** sync + AI extraction + confirm/dismiss. Measure accuracy against
-      ~100 hand-labelled emails before shipping.
+- [ ] **5. Gmail:** sync + AI extraction (emails and Classroom announcements) +
+      confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
+      shipping.
 - [ ] **6. Views:** home summary, calendar with category filters
 - [ ] **7. Voice:** dictate to add or correct items (only if time allows)
 
@@ -105,6 +109,13 @@ Update at the end of every session: what was finished, what's next.
   its JSON and save it as `feasibility/secrets/client_secret.json`. Then write the 3
   test scripts (sign in, list Classroom assignments, list last 20 emails: sender,
   subject, date only), run them with the Trichy ID, and record results.
+- 2026-10-09, session 3: **Stage 1 done.** OAuth client `feasibility-scripts`
+  (Desktop app) created; scripts in `feasibility/` (`npm run signin|classroom|gmail`).
+  Trichy ID signed in and all checks passed; results in feasibility/RESULTS.md.
+  Classroom announcements moved to the Stage 5 AI step.
+  **Next:** Stage 2 skeleton (Supabase project, Google sign-in on the website, empty
+  home page, deploy to Vercel). After 2026-10-16, run `npm run classroom` in
+  `feasibility/` to confirm the 7-day test-mode expiry.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -130,3 +141,5 @@ This becomes interview material, so keep it honest.
   deadlines in plain text (pre-reads by session date, guest lecture times), so they
   need AI extraction like emails. Also, 23 "active" courses incl. old terms: filter
   by recent activity. Due times come in UTC (18:29 UTC = 23:59 IST).
+- 2026-10-09: Classroom announcements move to the Stage 5 AI step; Stage 3 covers
+  only assignments and materials, so it stays simple and free of AI cost.
