@@ -45,3 +45,4 @@ next-env.d.ts
 
 # Stage 1 feasibility scripts: Google keys and sign-in tokens
 /feasibility/secrets/
+/feasibility/node_modules/

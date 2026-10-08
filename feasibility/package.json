@@ -1,0 +1,14 @@
+{
+  "name": "campus-hub-feasibility",
+  "private": true,
+  "description": "Stage 1 throwaway checks: can a Trichy ID grant Classroom and Gmail access?",
+  "type": "module",
+  "scripts": {
+    "signin": "node 1-signin.mjs",
+    "classroom": "node 2-classroom.mjs",
+    "gmail": "node 3-gmail.mjs"
+  },
+  "dependencies": {
+    "googleapis": "^185.0.0"
+  }
+}
