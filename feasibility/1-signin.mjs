@@ -5,7 +5,9 @@ import { getAuthClient, describeError, SCOPES } from "./auth.mjs";
 const auth = await getAuthClient({ fresh: true });
 
 // Google lets people untick individual permissions, so show exactly what was granted.
-const { scopes: granted } = await auth.getTokenInfo(auth.credentials.access_token);
+// Google reports coursework.me.readonly under its older name, so count that as granted.
+const { scopes } = await auth.getTokenInfo(auth.credentials.access_token);
+const granted = scopes.map((s) => s.replace("classroom.student-submissions.me.readonly", "classroom.coursework.me.readonly"));
 console.log("Permissions Google granted:");
 for (const scope of SCOPES) {
   console.log(`  ${granted.includes(scope) ? "YES" : "NO "}  ${scope.replace("https://www.googleapis.com/auth/", "")}`);

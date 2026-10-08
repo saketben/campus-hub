@@ -123,3 +123,10 @@ This becomes interview material, so keep it honest.
 - 2026-10-05: Google Cloud now requires 2-step verification on the owner account.
 - 2026-10-05: Postponed the Anthropic API key to Stage 5: it costs money (billed
   separately from a Claude subscription) and nothing before Stage 5 uses it.
+- 2026-10-09: Stage 1 result: a Trichy ID can grant all 5 read-only permissions,
+  Gmail included, to our unverified test app; IIM's settings blocked nothing.
+  Details in feasibility/RESULTS.md.
+- 2026-10-09: Surprise: Classroom isn't fully structured. Announcements carry
+  deadlines in plain text (pre-reads by session date, guest lecture times), so they
+  need AI extraction like emails. Also, 23 "active" courses incl. old terms: filter
+  by recent activity. Due times come in UTC (18:29 UTC = 23:59 IST).
