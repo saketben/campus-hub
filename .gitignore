@@ -42,3 +42,6 @@ next-env.d.ts
 
 # personal Claude Code settings
 .claude/settings.local.json
+
+# Stage 1 feasibility scripts: Google keys and sign-in tokens
+/feasibility/secrets/

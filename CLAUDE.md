@@ -96,6 +96,15 @@ Update at the end of every session: what was finished, what's next.
   test mode, read-only Classroom + Gmail scopes), then sign in with a Trichy ID, fetch
   Classroom assignments, fetch the last 20 emails. Also ask IT about an Internal
   project (see decision log).
+- 2026-10-08, session 2: **Stage 1 in progress.** Done: Classroom + Gmail APIs enabled;
+  consent screen set up (`Campus Hub (test)`, External, test mode); test users = Trichy
+  ID + personal Gmail; 5 read-only scopes added (classroom courses, coursework.me,
+  courseworkmaterials, announcements; gmail.readonly). Created `feasibility/secrets/`
+  (ignored by Git) for keys and tokens.
+  **Next:** create a "Desktop app" OAuth client named `feasibility-scripts`, download
+  its JSON and save it as `feasibility/secrets/client_secret.json`. Then write the 3
+  test scripts (sign in, list Classroom assignments, list last 20 emails: sender,
+  subject, date only), run them with the Trichy ID, and record results.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
