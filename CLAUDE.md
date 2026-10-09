@@ -25,6 +25,11 @@ Designed so it could later work for any student, and eventually for work tools.
    account access, or a native Google Sheet). **Do not scrape, screenshot, or otherwise
    work around the restriction.** Each student picks their electives and groups, and we
    show only their classes.
+   **Course outlines** (Saket provides the PDFs once per term) give each session's
+   case, readings, and guest lectures; the timetable turns session numbers into
+   dates. Show the outline as the baseline ("per course outline") and a professor's
+   Classroom update as the override ("updated by professor"). Store only the
+   extracted sessions, never the PDFs (they contain faculty contact details).
 3. **Gmail:** messy text, so AI extraction turns emails into items. Hardest source.
    Classroom also emails notifications, so remove duplicates across sources.
 4. **Voice input:** later, only for adding or correcting items.
@@ -73,8 +78,9 @@ Each stage ends working, tested, and committed.
       (live at https://campushub-iimt.vercel.app)
 - [ ] **3. Classroom:** sync job + Classroom section (assignments and materials;
       announcements wait for the Stage 5 AI step)
-- [ ] **4. Timetable:** parser + elective/group picker + "my classes tomorrow"
-      (depends on the academic office)
+- [ ] **4. Timetable + course outlines:** parser + elective/group picker + "my
+      classes tomorrow" + session pre-reads from course outlines (depends on the
+      academic office)
 - [ ] **5. Gmail:** sync + AI extraction (emails and Classroom announcements) +
       confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
       shipping.
@@ -170,3 +176,14 @@ This becomes interview material, so keep it honest.
 - 2026-10-10: Renamed the live address to campushub-iimt.vercel.app (free): Vercel's
   auto-name "campus-hub-mu-two" looked odd on Google's sign-in screen. Own domain
   still planned if the project scales.
+- 2026-10-10: Stage 3 sync: background job every 30 min (Supabase Cron, free; Vercel's
+  free scheduler only runs once a day) plus a check every time a student opens the
+  site, so new posts show within seconds when anyone is looking.
+- 2026-10-10: Surprise: Google has no "assignments without grades" permission; the
+  coursework permission says "course work and grades". Saket didn't want grades.
+  Chose to request it but never call the submissions endpoint (where grades live)
+  and say so on the Connect screen. The alternative was no assignments at all.
+- 2026-10-10: Saket's idea: course outlines as a source. Sample (MDT) is text, not a
+  scan, with a consistent "Session Number / Topics / Case / Readings" template;
+  includes guest lectures; has no dates, so it pairs with the timetable (Stage 4).
+  Outline = baseline, professor's Classroom update = override, both labelled.

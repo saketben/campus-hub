@@ -6,46 +6,63 @@ stage's plan.
 
 ## Stage 3: Classroom
 
-**Status:** DRAFT, not yet approved by Saket (2026-10-10). Don't build until the
-decisions below are agreed.
+**Status:** approved by Saket, D1–D5 (2026-10-10). In progress.
 
 **Goal:** a signed-in student taps "Connect Classroom" once, and their upcoming
 assignments and pre-reads (materials) appear on the home page on their own,
 each with a link back to Classroom, and stay up to date without them doing
 anything.
 
-**Not in this stage:** Classroom announcements (Stage 5 AI step), Gmail, the
-calendar view, confirm/dismiss buttons.
+**Not in this stage:** Classroom announcements (Stage 5 AI step), Gmail, course
+outlines (Stage 4), the calendar view, confirm/dismiss buttons.
 
-### Decisions to agree first
+### Decisions (approved)
 
-- **D1. Where the sync job runs (how often items refresh).** Unverified so far:
-  third-party write-ups say Vercel's free plan only runs scheduled jobs once a
-  day, and that Supabase's scheduler (pg_cron) may need a paid plan. Check the
-  official docs first. Options: (a) Vercel's scheduler if it allows enough runs;
-  (b) Supabase's scheduler calling our website; (c) a free external scheduler
-  (GitHub Actions or cron-job.org) calling our website with a secret;
-  (d) plus a "sync when the student opens the page, if older than ~15 min".
-- **D2. Storing the Classroom permission safely.** Connecting gives us a
-  long-lived Google "refresh token" per student. Store it in a separate table
-  that the website can never read (no row-level-security read policy), only the
-  server-side sync job using a server-only Supabase secret key kept in Vercel's
-  settings, never in code.
-- **D3. Which items to show.** Assignments with a due date in the future or no
-  due date; materials posted recently as pre-reads. Skip old courses (no activity
-  in ~60 days). Convert UTC to IST; date-only assignments show as "due <date>".
-- **D4. When the connection expires** (test mode: every 7 days). Show a clear
-  "Reconnect Classroom" message and always show "Last updated <time>", so the
-  list never looks complete when it isn't (trust rule).
-- **D5. Permissions requested:** only the 3 Classroom read-only ones we need now
-  (courses, own coursework, materials). Announcements are added in Stage 5.
+- **D1. Freshness.** The site checks Classroom every time a student opens it (at
+  most once a minute per student), showing the saved list instantly and
+  "Updating…" meanwhile. A background job runs every 30 minutes via Supabase
+  Cron (available on the free plan; Vercel's free scheduler only runs once a
+  day). Instant push alerts from Google: maybe later, not now.
+- **D2. Safe storage.** Each student's Google refresh token goes in a locked
+  table the website can never read (no read policy), encrypted with a key kept
+  only in Vercel's settings. Only server code using the Supabase secret key
+  touches it.
+- **D3. What to show.** Assignments due in the future or with no due date;
+  recent materials as pre-reads. Skip courses with no activity in ~60 days.
+  Store times in UTC, show IST; date-only items show as "due <date>".
+- **D4. Expiry (every 7 days in test mode).** A clear "Reconnect Classroom"
+  message, and "Last updated <time>" always visible, so the list never looks
+  complete when it isn't.
+- **D5. Permissions.** Only 3 read-only Classroom permissions: courses, own
+  coursework, materials. Google words the coursework one as "course work and
+  grades": we never call the submissions endpoint (where grades live) and say
+  so on the Connect screen.
 
-### Steps (to be detailed after the decisions)
+### Steps
 
-- [ ] 1. Verify scheduler limits (D1) and agree D1–D5
-- [ ] 2. "Connect Classroom" button and Google permission flow on our own site
-- [ ] 3. Safe storage for the Classroom connection (D2)
-- [ ] 4. Sync job: fetch from Classroom, save as items (no duplicates)
-- [ ] 5. Home page: upcoming items with due dates in IST and links back
-- [ ] 6. Schedule the sync (D1) + "Last updated" + reconnect message (D4)
-- [ ] 7. Test on phone and laptop with the Trichy ID; wrap up
+- [x] **1. Verify scheduler limits and agree D1–D5.**
+- [ ] **2. Database: connection tables** (Claude writes SQL, Saket runs it).
+      `google_tokens` (locked: encrypted refresh token, granted permissions) and
+      `classroom_status` (student can read their own: connected, last updated,
+      needs reconnect).
+- [ ] **3. Settings for the server** (Saket, guided). In Google Cloud: add a new
+      client secret to `campus-hub-website` and two redirect addresses
+      (localhost + live). From Supabase: the secret key. Plus a generated
+      encryption key. All server-only (no `NEXT_PUBLIC_`), in `.env.local` and
+      Vercel, never in code or chat.
+- [ ] **4. "Connect Classroom" flow** (Claude). Button → Google's permission
+      screen (3 permissions) → back to our site → check what was granted → store
+      the token. Explain the "grades" wording and the unverified-app warning on
+      the button screen.
+- [ ] **5. Sync** (Claude). Fetch recent courses, assignments (no submissions)
+      and materials; save as items with no duplicates; remove items deleted in
+      Classroom; mark "needs reconnect" when Google says access expired.
+- [ ] **6. Home page list** (Claude). Due soon / no due date / recent pre-reads,
+      times in IST, link back to each Classroom post, "Last updated", sync on
+      open with "Updating…". Test at phone and laptop width.
+- [ ] **7. Background job** (Claude + Saket). A protected sync address on our
+      site; Supabase Cron calls it every 30 minutes with a secret stored in Vault.
+- [ ] **8. Test end to end** on phone and laptop with the Trichy ID, including
+      disconnecting; then wrap up (logs, tick Stage 3, next plan).
+
+Each step ends with a commit.
