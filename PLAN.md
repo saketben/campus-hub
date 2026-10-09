@@ -45,7 +45,7 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       `google_tokens` (locked: encrypted refresh token, granted permissions) and
       `classroom_status` (student can read their own: connected, last updated,
       needs reconnect).
-- [ ] **3. Settings for the server** (Saket, guided). In Google Cloud: add a new
+- [x] **3. Settings for the server** (Saket, guided). In Google Cloud: add a new
       client secret to `campus-hub-website` and two redirect addresses
       (localhost + live). From Supabase: the secret key. Plus a generated
       encryption key. All server-only (no `NEXT_PUBLIC_`), in `.env.local` and
