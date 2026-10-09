@@ -41,7 +41,7 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
 ### Steps
 
 - [x] **1. Verify scheduler limits and agree D1–D5.**
-- [ ] **2. Database: connection tables** (Claude writes SQL, Saket runs it).
+- [x] **2. Database: connection tables** (Claude writes SQL, Saket runs it).
       `google_tokens` (locked: encrypted refresh token, granted permissions) and
       `classroom_status` (student can read their own: connected, last updated,
       needs reconnect).
