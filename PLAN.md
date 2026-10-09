@@ -42,25 +42,33 @@ each item can read.
 - [x] **3. Connect the website to Supabase** (Claude). Install Supabase's
       packages; put the project URL and publishable key in `.env.local`
       (ignored by Git).
-- [ ] **4. Sign-in, sign-out and an empty home page** (Claude). Signed out:
+- [x] **4. Sign-in, sign-out and an empty home page** (Claude). Signed out:
       a "Sign in with Google" button. Signed in: "Hi, <name>", an empty state
       that doesn't claim the list is complete, and a sign-out button. Check the
       Next.js 16 docs in `node_modules/next/dist/docs/` first (see AGENTS.md).
       Test at phone width (~390px) and laptop width.
+      Changed during the step: uses Google's own sign-in button (Google Identity
+      Services + Supabase `signInWithIdToken`) so Google's screen names our site,
+      not supabase.co. The site's address must be listed under the Google
+      client's "Authorized JavaScript origins". Google client ID is in
+      `.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Email sign-up is off in
+      Supabase.
 - [ ] **5. Create the `items` table** (Claude writes the SQL, Saket runs it).
       Fields from CLAUDE.md: source, type, title, date/time, confidence, link,
       status, plus owner and timestamps. Row-level security: each student can
       only read their own items.
 - [ ] **6. Put it online** (Saket, guided, on Vercel). Import the GitHub repo, add
-      the two Supabase settings, then add the live address to Supabase's allowed
-      redirect list. Test sign-in on the live site on a phone and a laptop.
+      the three settings from `.env.local`, then add the live address to the
+      Google client's "Authorized JavaScript origins". Test sign-in on the live
+      site on a phone and a laptop.
 - [ ] **7. Wrap up** (Claude). Update the logs in CLAUDE.md, tick Stage 2, and
       replace this file with the Stage 3 plan.
 
 Each step ends with a commit.
 
-### Known quirk
+### Known quirk (solved)
 
-Google's sign-in screen will say "to continue to <something>.supabase.co"
-instead of the app name. Fixing it needs a paid Supabase custom domain, so we
-leave it for the pilot.
+Supabase's normal Google sign-in made Google's screen say "Sign in to
+<random>.supabase.co", which looks like phishing. Solved in step 4 by using
+Google's own button: the screen now names our site. Showing the name "Campus Hub"
+and a logo needs our own domain plus Google brand verification (Option B, later).

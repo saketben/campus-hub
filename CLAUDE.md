@@ -149,3 +149,9 @@ This becomes interview material, so keep it honest.
   are separate "Connect" steps (Stage 3, Stage 5). Minimum permissions, less scary
   first screen, and basic sign-in is exempt from the 7-day test-mode expiry.
   Supabase region: Mumbai. Added PLAN.md for the current stage's steps.
+- 2026-10-09: Surprise: Supabase's standard Google sign-in shows "Sign in to
+  <random>.supabase.co" on Google's screen, which looks like phishing. Switched to
+  Google's own sign-in button (free) so the screen names our site. Later, if the
+  project scales: own domain (~₹500–1,000/yr) + Google brand verification to show
+  "Campus Hub" and a logo. Rejected a Supabase custom domain (~$35/month).
+  Also turned off email/password sign-up: Google is the only way in.
