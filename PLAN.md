@@ -32,7 +32,7 @@ each item can read.
 
 ### Steps
 
-- [ ] **1. Create the Supabase project** (Saket, in the Supabase dashboard).
+- [x] **1. Create the Supabase project** (Saket, in the Supabase dashboard).
       Name `campus-hub`, region Mumbai, free plan. Keep the database password in a
       password manager.
 - [ ] **2. Set up Google sign-in** (Saket, guided). In Google Cloud, create a
