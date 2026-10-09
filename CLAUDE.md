@@ -81,6 +81,8 @@ Each stage ends working, tested, and committed.
 - [ ] **7. Voice:** dictate to add or correct items (only if time allows)
 
 ## How we work
+- **Read PLAN.md at the start of every session.** It holds the current stage's
+  step-by-step plan and which steps are done.
 - One small task per request. Plan first for anything touching several files.
 - Never leave work half-finished at the end of a session.
 - Commit after every working step with a clear message.
@@ -143,3 +145,7 @@ This becomes interview material, so keep it honest.
   by recent activity. Due times come in UTC (18:29 UTC = 23:59 IST).
 - 2026-10-09: Classroom announcements move to the Stage 5 AI step; Stage 3 covers
   only assignments and materials, so it stays simple and free of AI cost.
+- 2026-10-09: Website sign-in asks only for name + email; Classroom and Gmail access
+  are separate "Connect" steps (Stage 3, Stage 5). Minimum permissions, less scary
+  first screen, and basic sign-in is exempt from the 7-day test-mode expiry.
+  Supabase region: Mumbai. Added PLAN.md for the current stage's steps.
