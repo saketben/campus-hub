@@ -69,7 +69,8 @@ Each stage ends working, tested, and committed.
 - [x] **1. Feasibility checks:** throwaway scripts: sign in with a Trichy ID, fetch
       Classroom assignments, fetch the last 20 emails. Record exactly what works and
       what is blocked. (All passed: see feasibility/RESULTS.md)
-- [ ] **2. Skeleton:** Google sign-in, database, empty home page, deployed online
+- [x] **2. Skeleton:** Google sign-in, database, empty home page, deployed online
+      (live at https://campushub-iimt.vercel.app)
 - [ ] **3. Classroom:** sync job + Classroom section (assignments and materials;
       announcements wait for the Stage 5 AI step)
 - [ ] **4. Timetable:** parser + elective/group picker + "my classes tomorrow"
@@ -118,6 +119,17 @@ Update at the end of every session: what was finished, what's next.
   **Next:** Stage 2 skeleton (Supabase project, Google sign-in on the website, empty
   home page, deploy to Vercel). After 2026-10-16, run `npm run classroom` in
   `feasibility/` to confirm the 7-day test-mode expiry.
+- 2026-10-10, session 4: **Stage 2 done.** Supabase project `campus-hub` (Mumbai);
+  Google sign-in via Google's own button (Google Identity Services +
+  `signInWithIdToken`), name + email only; email/password sign-up off; `items` table
+  with row-level security (`supabase/migrations/`); live on Vercel at
+  https://campushub-iimt.vercel.app (old campus-hub-mu-two address redirects).
+  Tested sign-in/out on phone and laptop. Website settings: `.env.local` locally,
+  Vercel Environment Variables online. Google client `campus-hub-website`
+  allows localhost + the live address as JavaScript origins.
+  **Next:** approve the Stage 3 plan in PLAN.md (draft), then build
+  "Connect Classroom". After 2026-10-16, run `npm run classroom` in `feasibility/`
+  to confirm the 7-day test-mode expiry.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -155,3 +167,6 @@ This becomes interview material, so keep it honest.
   project scales: own domain (~₹500–1,000/yr) + Google brand verification to show
   "Campus Hub" and a logo. Rejected a Supabase custom domain (~$35/month).
   Also turned off email/password sign-up: Google is the only way in.
+- 2026-10-10: Renamed the live address to campushub-iimt.vercel.app (free): Vercel's
+  auto-name "campus-hub-mu-two" looked odd on Google's sign-in screen. Own domain
+  still planned if the project scales.

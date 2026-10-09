@@ -4,75 +4,48 @@ Only the stage we're working on lives here. When it's done, its outcomes move to
 the session and decision logs in CLAUDE.md, and this file is replaced by the next
 stage's plan.
 
-## Stage 2: Skeleton
+## Stage 3: Classroom
 
-**Status:** approved by Saket, plan and D1–D3 (2026-10-09). In progress.
+**Status:** DRAFT, not yet approved by Saket (2026-10-10). Don't build until the
+decisions below are agreed.
 
-**Goal:** a student opens the website on their phone or laptop, signs in with
-their Trichy ID, and sees an empty home page with their name. The site is online
-(on Vercel), and the database has an empty `items` table that only the owner of
-each item can read.
+**Goal:** a signed-in student taps "Connect Classroom" once, and their upcoming
+assignments and pre-reads (materials) appear on the home page on their own,
+each with a link back to Classroom, and stay up to date without them doing
+anything.
 
-**Not in this stage:** Classroom or Gmail data, sync jobs, a calendar, or
-"disconnect and delete my data". Those come in later stages.
+**Not in this stage:** Classroom announcements (Stage 5 AI step), Gmail, the
+calendar view, confirm/dismiss buttons.
 
-### Decisions
+### Decisions to agree first
 
-- **D1. Sign-in asks only for name and email, not Classroom or Gmail.**
-  Students grant Classroom access in a separate "Connect Classroom" step in
-  Stage 3, and Gmail access in Stage 5. Reasons: request the minimum permissions
-  (CLAUDE.md privacy rule); a scary Gmail request on day one costs trust; and
-  Google's 7-day test-mode expiry does not apply to name-and-email sign-in, so
-  students stay signed in even when the Classroom connection needs renewing.
-- **D2. Supabase project region: Mumbai (South Asia).** Closest to Trichy, so
-  pages load faster.
-- **D3. The database layout is saved as a SQL file in the repo**
-  (`supabase/migrations/`) and run by pasting it into Supabase's SQL editor.
-  It keeps a record of every database change in GitHub without extra tools.
+- **D1. Where the sync job runs (how often items refresh).** Unverified so far:
+  third-party write-ups say Vercel's free plan only runs scheduled jobs once a
+  day, and that Supabase's scheduler (pg_cron) may need a paid plan. Check the
+  official docs first. Options: (a) Vercel's scheduler if it allows enough runs;
+  (b) Supabase's scheduler calling our website; (c) a free external scheduler
+  (GitHub Actions or cron-job.org) calling our website with a secret;
+  (d) plus a "sync when the student opens the page, if older than ~15 min".
+- **D2. Storing the Classroom permission safely.** Connecting gives us a
+  long-lived Google "refresh token" per student. Store it in a separate table
+  that the website can never read (no row-level-security read policy), only the
+  server-side sync job using a server-only Supabase secret key kept in Vercel's
+  settings, never in code.
+- **D3. Which items to show.** Assignments with a due date in the future or no
+  due date; materials posted recently as pre-reads. Skip old courses (no activity
+  in ~60 days). Convert UTC to IST; date-only assignments show as "due <date>".
+- **D4. When the connection expires** (test mode: every 7 days). Show a clear
+  "Reconnect Classroom" message and always show "Last updated <time>", so the
+  list never looks complete when it isn't (trust rule).
+- **D5. Permissions requested:** only the 3 Classroom read-only ones we need now
+  (courses, own coursework, materials). Announcements are added in Stage 5.
 
-### Steps
+### Steps (to be detailed after the decisions)
 
-- [x] **1. Create the Supabase project** (Saket, in the Supabase dashboard).
-      Name `campus-hub`, region Mumbai, free plan. Keep the database password in a
-      password manager.
-- [x] **2. Set up Google sign-in** (Saket, guided). In Google Cloud, create a
-      "Web application" OAuth client whose redirect address is Supabase's
-      callback URL. In Supabase, turn on the Google provider and paste in that
-      client's ID and secret.
-- [x] **3. Connect the website to Supabase** (Claude). Install Supabase's
-      packages; put the project URL and publishable key in `.env.local`
-      (ignored by Git).
-- [x] **4. Sign-in, sign-out and an empty home page** (Claude). Signed out:
-      a "Sign in with Google" button. Signed in: "Hi, <name>", an empty state
-      that doesn't claim the list is complete, and a sign-out button. Check the
-      Next.js 16 docs in `node_modules/next/dist/docs/` first (see AGENTS.md).
-      Test at phone width (~390px) and laptop width.
-      Changed during the step: uses Google's own sign-in button (Google Identity
-      Services + Supabase `signInWithIdToken`) so Google's screen names our site,
-      not supabase.co. The site's address must be listed under the Google
-      client's "Authorized JavaScript origins". Google client ID is in
-      `.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Email sign-up is off in
-      Supabase.
-- [x] **5. Create the `items` table** (Claude writes the SQL, Saket runs it).
-      Fields from CLAUDE.md: source, type, title, date/time, confidence, link,
-      status, plus owner and timestamps. Row-level security: each student can
-      only read their own items.
-      Done: `supabase/migrations/20261009120000_create_items.sql` (adds
-      `source_id` to avoid duplicates and `all_day` for date-only items).
-      Checked: not-signed-in visitors are refused. Reading as a signed-in
-      student gets tested in Stage 3, when there are rows.
-- [ ] **6. Put it online** (Saket, guided, on Vercel). Import the GitHub repo, add
-      the three settings from `.env.local`, then add the live address to the
-      Google client's "Authorized JavaScript origins". Test sign-in on the live
-      site on a phone and a laptop.
-- [ ] **7. Wrap up** (Claude). Update the logs in CLAUDE.md, tick Stage 2, and
-      replace this file with the Stage 3 plan.
-
-Each step ends with a commit.
-
-### Known quirk (solved)
-
-Supabase's normal Google sign-in made Google's screen say "Sign in to
-<random>.supabase.co", which looks like phishing. Solved in step 4 by using
-Google's own button: the screen now names our site. Showing the name "Campus Hub"
-and a logo needs our own domain plus Google brand verification (Option B, later).
+- [ ] 1. Verify scheduler limits (D1) and agree D1–D5
+- [ ] 2. "Connect Classroom" button and Google permission flow on our own site
+- [ ] 3. Safe storage for the Classroom connection (D2)
+- [ ] 4. Sync job: fetch from Classroom, save as items (no duplicates)
+- [ ] 5. Home page: upcoming items with due dates in IST and links back
+- [ ] 6. Schedule the sync (D1) + "Last updated" + reconnect message (D4)
+- [ ] 7. Test on phone and laptop with the Trichy ID; wrap up
