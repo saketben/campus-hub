@@ -53,10 +53,14 @@ each item can read.
       client's "Authorized JavaScript origins". Google client ID is in
       `.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Email sign-up is off in
       Supabase.
-- [ ] **5. Create the `items` table** (Claude writes the SQL, Saket runs it).
+- [x] **5. Create the `items` table** (Claude writes the SQL, Saket runs it).
       Fields from CLAUDE.md: source, type, title, date/time, confidence, link,
       status, plus owner and timestamps. Row-level security: each student can
       only read their own items.
+      Done: `supabase/migrations/20261009120000_create_items.sql` (adds
+      `source_id` to avoid duplicates and `all_day` for date-only items).
+      Checked: not-signed-in visitors are refused. Reading as a signed-in
+      student gets tested in Stage 3, when there are rows.
 - [ ] **6. Put it online** (Saket, guided, on Vercel). Import the GitHub repo, add
       the three settings from `.env.local`, then add the live address to the
       Google client's "Authorized JavaScript origins". Test sign-in on the live
