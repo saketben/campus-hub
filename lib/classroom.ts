@@ -1,0 +1,159 @@
+import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { decrypt } from "@/lib/crypto";
+import { GoogleTokenError, getAccessToken } from "@/lib/google";
+
+// Fetches a student's Classroom assignments and pre-reads and saves them as items.
+// Only reads course lists, assignments and materials. It never calls the
+// "studentSubmissions" part of the API, which is where grades live (decision D5).
+
+const API = "https://classroom.googleapis.com/v1";
+const DAY = 24 * 60 * 60 * 1000;
+const ACTIVE_COURSE_DAYS = 60; // skip courses with no new posts in this long (D3)
+const RECENT_MATERIAL_DAYS = 14; // pre-reads posted in the last two weeks
+const MIN_SECONDS_BETWEEN_SYNCS = 60; // at most once a minute per student (D1)
+
+type Course = { id: string; name: string };
+type DueDate = { year: number; month: number; day: number };
+type CourseWork = {
+  id: string;
+  title: string;
+  alternateLink: string;
+  creationTime: string;
+  updateTime: string;
+  dueDate?: DueDate;
+  dueTime?: { hours?: number; minutes?: number };
+};
+type Material = { id: string; title: string; alternateLink: string; creationTime: string; updateTime: string };
+
+async function getAll<T>(token: string, path: string, key: string): Promise<T[]> {
+  const results: T[] = [];
+  let pageToken = "";
+  do {
+    const url = `${API}${path}${path.includes("?") ? "&" : "?"}pageSize=100${pageToken ? `&pageToken=${pageToken}` : ""}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Classroom ${path} -> HTTP ${res.status}`);
+    const body = await res.json();
+    results.push(...((body[key] ?? []) as T[]));
+    pageToken = body.nextPageToken ?? "";
+  } while (pageToken);
+  return results;
+}
+
+// Classroom gives due dates and times in UTC. With no time, we treat it as due by
+// 23:59 IST that day and flag it as "all day" so the page shows only the date.
+function dueAt(work: CourseWork): { due_at: string | null; all_day: boolean } {
+  if (!work.dueDate) return { due_at: null, all_day: false };
+  const { year, month, day } = work.dueDate;
+  if (!work.dueTime) return { due_at: new Date(Date.UTC(year, month - 1, day, 18, 29)).toISOString(), all_day: true };
+  const { hours = 0, minutes = 0 } = work.dueTime;
+  return { due_at: new Date(Date.UTC(year, month - 1, day, hours, minutes)).toISOString(), all_day: false };
+}
+
+export type SyncResult = "synced" | "skipped" | "not_connected" | "needs_reconnect" | "failed";
+
+export async function syncClassroom(userId: string, { force = false } = {}): Promise<SyncResult> {
+  const admin = createAdminClient();
+
+  const { data: tokenRow } = await admin
+    .from("google_tokens")
+    .select("refresh_token_encrypted")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const { data: status } = await admin
+    .from("sync_status")
+    .select("last_attempt_at")
+    .eq("user_id", userId)
+    .eq("source", "classroom")
+    .maybeSingle();
+  if (!tokenRow || !status) return "not_connected";
+
+  const now = new Date();
+  if (!force && status.last_attempt_at && now.getTime() - Date.parse(status.last_attempt_at) < MIN_SECONDS_BETWEEN_SYNCS * 1000) {
+    return "skipped";
+  }
+  const setStatus = (fields: Record<string, unknown>) =>
+    admin.from("sync_status").update(fields).eq("user_id", userId).eq("source", "classroom");
+  await setStatus({ last_attempt_at: now.toISOString() });
+
+  let token: string;
+  try {
+    token = await getAccessToken(decrypt(tokenRow.refresh_token_encrypted));
+  } catch (e) {
+    const expired = e instanceof GoogleTokenError && e.needsReconnect;
+    await setStatus({ state: expired ? "needs_reconnect" : "connected", last_error: String(e) });
+    return expired ? "needs_reconnect" : "failed";
+  }
+
+  try {
+    const courses = await getAll<Course>(token, "/courses?studentId=me&courseStates=ACTIVE", "courses");
+    const items: ({ source_id: string } & Record<string, unknown>)[] = [];
+
+    for (const course of courses) {
+      const [work, materials] = await Promise.all([
+        getAll<CourseWork>(token, `/courses/${course.id}/courseWork`, "courseWork"),
+        getAll<Material>(token, `/courses/${course.id}/courseWorkMaterials`, "courseWorkMaterial"),
+      ]);
+
+      // Skip old courses: nothing posted or changed recently.
+      const lastActivity = Math.max(0, ...[...work, ...materials].map((x) => Date.parse(x.updateTime)));
+      if (now.getTime() - lastActivity > ACTIVE_COURSE_DAYS * DAY) continue;
+
+      for (const w of work) {
+        const due = dueAt(w);
+        // Upcoming assignments, plus ones with no due date (shown, not hidden: trust rule).
+        if (due.due_at && Date.parse(due.due_at) < now.getTime()) continue;
+        items.push({
+          source_id: `coursework:${w.id}`,
+          type: "assignment",
+          title: w.title,
+          ...due,
+          posted_at: w.creationTime,
+          link: w.alternateLink,
+          course_name: course.name,
+        });
+      }
+
+      for (const m of materials) {
+        if (now.getTime() - Date.parse(m.creationTime) > RECENT_MATERIAL_DAYS * DAY) continue;
+        items.push({
+          source_id: `material:${m.id}`,
+          type: "pre_read",
+          title: m.title,
+          due_at: null,
+          all_day: false,
+          posted_at: m.creationTime,
+          link: m.alternateLink,
+          course_name: course.name,
+        });
+      }
+    }
+
+    const rows = items.map((item) => ({
+      ...item,
+      user_id: userId,
+      source: "classroom",
+      confidence: 1,
+      status: "confirmed",
+      updated_at: now.toISOString(),
+    }));
+    if (rows.length > 0) {
+      const { error } = await admin.from("items").upsert(rows, { onConflict: "user_id,source,source_id" });
+      if (error) throw new Error(`Saving items: ${error.message}`);
+    }
+
+    // Remove items that are no longer current (deleted in Classroom, past due, or old).
+    // Everything above succeeded, so the fetched list is complete and this is safe.
+    const keep = rows.map((r) => `"${r.source_id}"`).join(",");
+    let stale = admin.from("items").delete().eq("user_id", userId).eq("source", "classroom");
+    if (keep) stale = stale.not("source_id", "in", `(${keep})`);
+    const { error: deleteError } = await stale;
+    if (deleteError) throw new Error(`Removing old items: ${deleteError.message}`);
+
+    await setStatus({ state: "connected", last_synced_at: now.toISOString(), last_error: null });
+    return "synced";
+  } catch (e) {
+    await setStatus({ last_error: String(e) });
+    return "failed";
+  }
+}

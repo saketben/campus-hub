@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encrypt } from "@/lib/crypto";
+import { syncClassroom } from "@/lib/classroom";
 import { classroomCallbackUrl, emailFromIdToken, exchangeCode, missingClassroomScopes } from "@/lib/google";
 
 // Step 2 of connecting: Google sends the student back here with a one-time code.
@@ -49,5 +50,7 @@ export async function GET(request: NextRequest) {
     .upsert({ user_id: userId, source: "classroom", state: "connected", last_error: null });
   if (tokenError || statusError) return done("error");
 
+  // Fetch their items straight away, so the list is ready when they land on the page.
+  await syncClassroom(userId, { force: true });
   return done("connected");
 }

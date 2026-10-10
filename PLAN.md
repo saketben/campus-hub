@@ -54,7 +54,7 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       screen (3 permissions) → back to our site → check what was granted → store
       the token. Explain the "grades" wording and the unverified-app warning on
       the button screen.
-- [ ] **5. Sync** (Claude). Fetch recent courses, assignments (no submissions)
+- [x] **5. Sync** (Claude). Fetch recent courses, assignments (no submissions)
       and materials; save as items with no duplicates; remove items deleted in
       Classroom; mark "needs reconnect" when Google says access expired.
 - [ ] **6. Home page list** (Claude). Due soon / no due date / recent pre-reads,
