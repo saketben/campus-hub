@@ -162,6 +162,16 @@ Update at the end of every session: what was finished, what's next.
   list when published, and all course outlines (one folder) at Stage 4. After
   2026-10-16, check the 7-day expiry using the website's Classroom connection
   (the Stage 1 script's access was removed).
+- 2026-10-11, session 6: **Stage 3 steps 7–8 done; step 9 half done.** Home page
+  lists Classroom items (upcoming in IST, undated, recent pre-reads with previews,
+  links back, "Last updated"); checks Classroom on open and on returning to the
+  tab (max once a minute). Background refresh: `/api/cron/sync` protected by
+  CRON_SECRET, called every 30 min by Supabase Cron (password in Vault as
+  `cron_secret`); first automatic run confirmed 03:00 IST. Live-site test passed
+  on phone + laptop.
+  **Next:** finish step 9 (test "Change courses", then Disconnect and Connect
+  again), wrap up Stage 3 and draft the next stage plan. After 2026-10-16, check
+  the 7-day expiry: the card should switch to "Reconnect Classroom".
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.

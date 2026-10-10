@@ -79,5 +79,10 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       net._http_response order by created desc limit 5;`
 - [ ] **9. Test end to end** on phone and laptop with the Trichy ID, including
       disconnecting; then wrap up (logs, tick Stage 3, next plan).
+      Done 2026-10-11 on the live site (phone + laptop): list loads, "Last
+      updated", links open the right Classroom posts. Added: re-check when the
+      student returns to the tab/app. **Still to test:** "Change courses", and
+      Disconnect (Classroom items, course list and status deleted; access removed
+      at Google) followed by Connect again (items come back).
 
 Each step ends with a commit.
