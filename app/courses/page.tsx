@@ -11,9 +11,12 @@ export default async function CoursesPage() {
   if (!data?.claims) redirect("/");
 
   // Row-level security: only this student's own courses come back.
+  // Ticked courses first, then by most recent post. The order is fixed when the
+  // page opens, so rows don't jump around while the student ticks and unticks.
   const { data: courses } = await supabase
     .from("student_courses")
     .select("course_id, course_name, selected, last_activity_at")
+    .order("selected", { ascending: false })
     .order("last_activity_at", { ascending: false, nullsFirst: false });
 
   return (

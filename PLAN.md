@@ -60,7 +60,9 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       Classroom; mark "needs reconnect" when Google says access expired.
       Result: 6 items for Saket; it showed the 60-day "active course" guess is
       wrong (finished BADM still appeared), which led to step 6.
-- [ ] **6. Course picker** (Claude; Saket runs SQL). "Which of these are your
+- [x] **6. Course picker** (Claude; Saket runs SQL). Done: pre-ticks come from the
+      official Term V list in `lib/term-courses.ts` (swap it each term); ticked
+      courses listed first. Tested by Saket on laptop. "Which of these are your
       current courses?" with search and checkboxes, recently active courses
       pre-ticked; changeable any time. Only ticked courses are synced, with no age
       limit on their assignments (term-long projects stay visible). Replaces the

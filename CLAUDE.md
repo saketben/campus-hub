@@ -147,6 +147,21 @@ Update at the end of every session: what was finished, what's next.
   **Next:** approve the Stage 3 plan in PLAN.md (draft), then build
   "Connect Classroom". After 2026-10-16, run `npm run classroom` in `feasibility/`
   to confirm the 7-day test-mode expiry.
+- 2026-10-10, session 5: **Stage 3 in progress (steps 1–6 of 9 done, see PLAN.md).**
+  Supabase Cron confirmed on the free plan. New tables: `google_tokens` (locked,
+  AES-encrypted refresh token), `sync_status`, `student_courses`; items gained
+  `course_name`, `posted_at`, `details`. Server-only secrets in `.env.local` + Vercel
+  (GOOGLE_CLIENT_SECRET, SUPABASE_SECRET_KEY, TOKEN_ENCRYPTION_KEY, CRON_SECRET).
+  "Connect Classroom" works (3 read-only permissions; Stage 1's Gmail grant removed
+  via a clean slate). Sync (`lib/classroom.ts`) saves upcoming/undated assignments
+  and 14-day pre-reads with previews from ticked courses only. Course picker at
+  `/courses`, pre-ticked from the Term V list (`lib/term-courses.ts`).
+  **Next:** step 7, show items on the home page (IST, previews, links back, "Last
+  updated", sync on open). Then step 8 (Supabase Cron every 30 min) and step 9
+  (full test incl. disconnect, phone + laptop). Saket will provide the Term VI
+  list when published, and all course outlines (one folder) at Stage 4. After
+  2026-10-16, check the 7-day expiry using the website's Classroom connection
+  (the Stage 1 script's access was removed).
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -207,3 +222,7 @@ This becomes interview material, so keep it honest.
 - 2026-10-10: Saket's section layout for Stage 6: Home, Classroom, Gmail, Timetable,
   Subjects, with a calendar toggle in every section instead of only one Calendar
   page (a combined Calendar section: decide in Stage 6).
+- 2026-10-10: Pre-ticking by "recent posts" got 2 of Saket's 5 courses wrong (ticked
+  last term's MDT; missed ADPM, which only posts announcements). Saket supplied the
+  official Term V elective list; matching Classroom names to it got 5 of 5. The list
+  is swapped each term (code, title, area only; no faculty details).
