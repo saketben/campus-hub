@@ -28,6 +28,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         .neq("status", "dismissed")
     : { data: null };
 
+  // The ticked courses, shown as "Watching: …" so students can see what's covered.
+  const { data: watched } = classroomStatus
+    ? await supabase.from("student_courses").select("course_name").eq("selected", true).order("course_name")
+    : { data: null };
+
   // The Classroom card goes first when it needs the student's attention, last otherwise.
   const needsAttention =
     !classroomStatus || classroomStatus.state !== "connected" || !classroomStatus.courses_confirmed_at;
@@ -55,7 +60,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             {classroomStatus && <SyncStatus lastSyncedAt={classroomStatus.last_synced_at} />}
           </div>
           {needsAttention && card}
-          {classroomStatus && <ItemsList items={items ?? []} now={requestTime} />}
+          {classroomStatus && <ItemsList items={items ?? []} watching={(watched ?? []).map((c) => c.course_name)} now={requestTime} />}
           {!needsAttention && card}
         </section>
       ) : (

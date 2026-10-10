@@ -78,7 +78,7 @@ function Group({ title, items, now }: { title: string; items: Item[]; now: numbe
 }
 
 // The student's Classroom items in three groups. Never claims to be complete (trust rule).
-export function ItemsList({ items, now }: { items: Item[]; now: number }) {
+export function ItemsList({ items, watching, now }: { items: Item[]; watching: string[]; now: number }) {
   const upcoming = items
     .filter((i) => i.type === "assignment" && i.due_at)
     .sort((a, b) => Date.parse(a.due_at!) - Date.parse(b.due_at!));
@@ -89,6 +89,10 @@ export function ItemsList({ items, now }: { items: Item[]; now: number }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="font-medium text-zinc-900 dark:text-zinc-100">Watching:</span>{" "}
+        {watching.length > 0 ? watching.join(", ") : "no courses ticked yet"}
+      </p>
       {items.length === 0 && (
         <p className="rounded-xl border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
           No upcoming assignments or recent pre-reads in your ticked courses right now.
