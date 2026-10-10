@@ -1,11 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
+import { ClassroomCard } from "./classroom-card";
 import { GoogleSignIn } from "./google-sign-in";
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
+  const { classroom: message } = await searchParams;
+
+  // Row-level security means this only ever returns the signed-in student's own row.
+  const { data: classroomStatus } = user
+    ? await supabase.from("sync_status").select("state, last_synced_at").eq("source", "classroom").maybeSingle()
+    : { data: null };
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8 sm:py-16">
@@ -23,13 +30,7 @@ export default async function Home() {
       {user ? (
         <section className="flex flex-col gap-4">
           <p className="text-lg">Hi, {user.user_metadata?.full_name ?? user.email}</p>
-          <div className="rounded-xl border border-zinc-200 p-6 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-            <p className="font-medium text-zinc-900 dark:text-zinc-100">Nothing here yet</p>
-            <p className="mt-2 text-sm">
-              Your Classroom assignments and pre-reads will appear here once you connect Classroom.
-              That&apos;s coming soon.
-            </p>
-          </div>
+          <ClassroomCard status={classroomStatus} message={typeof message === "string" ? message : undefined} />
         </section>
       ) : (
         <section className="flex flex-col gap-4">

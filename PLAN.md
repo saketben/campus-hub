@@ -50,7 +50,7 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       (localhost + live). From Supabase: the secret key. Plus a generated
       encryption key. All server-only (no `NEXT_PUBLIC_`), in `.env.local` and
       Vercel, never in code or chat.
-- [ ] **4. "Connect Classroom" flow** (Claude). Button → Google's permission
+- [x] **4. "Connect Classroom" flow** (Claude). Button → Google's permission
       screen (3 permissions) → back to our site → check what was granted → store
       the token. Explain the "grades" wording and the unverified-app warning on
       the button screen.
