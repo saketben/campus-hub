@@ -68,7 +68,7 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
       limit on their assignments (term-long projects stay visible). Replaces the
       60-day rule in D3. Also save a short preview for each item (first lines of
       the post + attachment names).
-- [ ] **7. Home page list** (Claude). Due soon / no due date / recent pre-reads,
+- [x] **7. Home page list** (Claude). Due soon / no due date / recent pre-reads,
       with previews, times in IST, link back to each Classroom post, "Last
       updated", sync on open with "Updating…". Test at phone and laptop width.
 - [ ] **8. Background job** (Claude + Saket). A protected sync address on our

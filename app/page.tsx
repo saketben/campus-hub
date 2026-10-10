@@ -2,17 +2,38 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 import { ClassroomCard } from "./classroom-card";
 import { GoogleSignIn } from "./google-sign-in";
+import { ItemsList } from "./items-list";
+import { SyncStatus } from "./sync-status";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
   const { classroom: message } = await searchParams;
+  // For "in 3 days" labels. This page renders once per request on the server, so reading the clock is fine.
+  // eslint-disable-next-line react-hooks/purity
+  const requestTime = Date.now();
 
   // Row-level security means this only ever returns the signed-in student's own row.
   const { data: classroomStatus } = user
     ? await supabase.from("sync_status").select("state, last_synced_at, courses_confirmed_at").eq("source", "classroom").maybeSingle()
     : { data: null };
+
+  // Items from ticked courses; dismissed ones are hidden (dismissing arrives in Stage 5).
+  const { data: items } = classroomStatus
+    ? await supabase
+        .from("items")
+        .select("id, type, title, course_name, due_at, all_day, posted_at, details, link")
+        .eq("source", "classroom")
+        .neq("status", "dismissed")
+    : { data: null };
+
+  // The Classroom card goes first when it needs the student's attention, last otherwise.
+  const needsAttention =
+    !classroomStatus || classroomStatus.state !== "connected" || !classroomStatus.courses_confirmed_at;
+  const card = (
+    <ClassroomCard status={classroomStatus} message={typeof message === "string" ? message : undefined} />
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8 sm:py-16">
@@ -29,8 +50,13 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
       {user ? (
         <section className="flex flex-col gap-4">
-          <p className="text-lg">Hi, {user.user_metadata?.full_name ?? user.email}</p>
-          <ClassroomCard status={classroomStatus} message={typeof message === "string" ? message : undefined} />
+          <div className="flex flex-col gap-1">
+            <p className="text-lg">Hi, {user.user_metadata?.full_name ?? user.email}</p>
+            {classroomStatus && <SyncStatus lastSyncedAt={classroomStatus.last_synced_at} />}
+          </div>
+          {needsAttention && card}
+          {classroomStatus && <ItemsList items={items ?? []} now={requestTime} />}
+          {!needsAttention && card}
         </section>
       ) : (
         <section className="flex flex-col gap-4">
