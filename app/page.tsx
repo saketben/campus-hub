@@ -11,7 +11,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   // Row-level security means this only ever returns the signed-in student's own row.
   const { data: classroomStatus } = user
-    ? await supabase.from("sync_status").select("state, last_synced_at").eq("source", "classroom").maybeSingle()
+    ? await supabase.from("sync_status").select("state, last_synced_at, courses_confirmed_at").eq("source", "classroom").maybeSingle()
     : { data: null };
 
   return (

@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { GoogleTokenError, getAccessToken } from "@/lib/google";
+import { isCurrentTermCourse } from "@/lib/term-courses";
 
 // Fetches a student's Classroom assignments and pre-reads and saves them as items.
 // Only reads course lists, assignments and materials. It never calls the
@@ -9,22 +10,39 @@ import { GoogleTokenError, getAccessToken } from "@/lib/google";
 
 const API = "https://classroom.googleapis.com/v1";
 const DAY = 24 * 60 * 60 * 1000;
-const ACTIVE_COURSE_DAYS = 60; // skip courses with no new posts in this long (D3)
 const RECENT_MATERIAL_DAYS = 14; // pre-reads posted in the last two weeks
 const MIN_SECONDS_BETWEEN_SYNCS = 60; // at most once a minute per student (D1)
+const PREVIEW_CHARS = 200;
 
 type Course = { id: string; name: string };
 type DueDate = { year: number; month: number; day: number };
-type CourseWork = {
+type Attachment = {
+  driveFile?: { driveFile?: { title?: string } };
+  link?: { title?: string; url?: string };
+  youtubeVideo?: { title?: string };
+  form?: { title?: string };
+};
+type Post = {
   id: string;
   title: string;
+  description?: string;
+  materials?: Attachment[];
   alternateLink: string;
   creationTime: string;
   updateTime: string;
-  dueDate?: DueDate;
-  dueTime?: { hours?: number; minutes?: number };
 };
-type Material = { id: string; title: string; alternateLink: string; creationTime: string; updateTime: string };
+type CourseWork = Post & { dueDate?: DueDate; dueTime?: { hours?: number; minutes?: number } };
+
+// Short preview: the first lines of the post plus the names of attached files.
+function preview(post: Post): string | null {
+  const text = (post.description ?? "").replace(/\s+/g, " ").trim();
+  const short = text.length > PREVIEW_CHARS ? `${text.slice(0, PREVIEW_CHARS).trimEnd()}…` : text;
+  const files = (post.materials ?? [])
+    .map((m) => m.driveFile?.driveFile?.title ?? m.link?.title ?? m.link?.url ?? m.youtubeVideo?.title ?? m.form?.title)
+    .filter(Boolean);
+  const parts = [short, files.length ? `Attached: ${files.join(", ")}` : ""].filter(Boolean);
+  return parts.length ? parts.join("\n") : null;
+}
 
 async function getAll<T>(token: string, path: string, key: string): Promise<T[]> {
   const results: T[] = [];
@@ -62,7 +80,7 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
     .maybeSingle();
   const { data: status } = await admin
     .from("sync_status")
-    .select("last_attempt_at")
+    .select("last_attempt_at, courses_confirmed_at")
     .eq("user_id", userId)
     .eq("source", "classroom")
     .maybeSingle();
@@ -87,17 +105,32 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
 
   try {
     const courses = await getAll<Course>(token, "/courses?studentId=me&courseStates=ACTIVE", "courses");
+    const { data: known } = await admin.from("student_courses").select("course_id, selected").eq("user_id", userId);
+    const picked = new Map((known ?? []).map((c) => [c.course_id, c.selected as boolean]));
+
     const items: ({ source_id: string } & Record<string, unknown>)[] = [];
+    const courseRows: Record<string, unknown>[] = [];
 
     for (const course of courses) {
       const [work, materials] = await Promise.all([
         getAll<CourseWork>(token, `/courses/${course.id}/courseWork`, "courseWork"),
-        getAll<Material>(token, `/courses/${course.id}/courseWorkMaterials`, "courseWorkMaterial"),
+        getAll<Post>(token, `/courses/${course.id}/courseWorkMaterials`, "courseWorkMaterial"),
       ]);
 
-      // Skip old courses: nothing posted or changed recently.
+      // Remember every course for the picker. Until the student has confirmed their
+      // picks, we guess from this term's official course list; after that their
+      // choice wins, and only courses new to us get a guess.
       const lastActivity = Math.max(0, ...[...work, ...materials].map((x) => Date.parse(x.updateTime)));
-      if (now.getTime() - lastActivity > ACTIVE_COURSE_DAYS * DAY) continue;
+      const guess = isCurrentTermCourse(course.name);
+      const selected = status.courses_confirmed_at ? (picked.get(course.id) ?? guess) : guess;
+      courseRows.push({
+        user_id: userId,
+        course_id: course.id,
+        course_name: course.name,
+        selected,
+        last_activity_at: lastActivity ? new Date(lastActivity).toISOString() : null,
+      });
+      if (!selected) continue;
 
       for (const w of work) {
         const due = dueAt(w);
@@ -108,6 +141,7 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
           type: "assignment",
           title: w.title,
           ...due,
+          details: preview(w),
           posted_at: w.creationTime,
           link: w.alternateLink,
           course_name: course.name,
@@ -122,12 +156,23 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
           title: m.title,
           due_at: null,
           all_day: false,
+          details: preview(m),
           posted_at: m.creationTime,
           link: m.alternateLink,
           course_name: course.name,
         });
       }
     }
+
+    // Save the course list for the picker, and forget courses that left Classroom.
+    if (courseRows.length > 0) {
+      const { error } = await admin.from("student_courses").upsert(courseRows, { onConflict: "user_id,course_id" });
+      if (error) throw new Error(`Saving courses: ${error.message}`);
+    }
+    const current = courses.map((c) => `"${c.id}"`).join(",");
+    let gone = admin.from("student_courses").delete().eq("user_id", userId);
+    if (current) gone = gone.not("course_id", "in", `(${current})`);
+    await gone;
 
     const rows = items.map((item) => ({
       ...item,

@@ -1,9 +1,15 @@
+import Link from "next/link";
 import { disconnectClassroom } from "./actions";
 
-type Status = { state: "connected" | "needs_reconnect"; last_synced_at: string | null } | null;
+type Status = {
+  state: string;
+  last_synced_at: string | null;
+  courses_confirmed_at: string | null;
+} | null;
 
 const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   connected: { text: "Classroom connected.", tone: "ok" },
+  courses: { text: "Courses saved. Your list now shows only the courses you picked.", tone: "ok" },
   disconnected: { text: "Classroom disconnected. We deleted your Classroom items and asked Google to cancel our access.", tone: "ok" },
   cancelled: { text: "You cancelled on Google's screen. Nothing was connected.", tone: "warn" },
   missing: { text: "Some permissions were unticked on Google's screen. Please connect again and allow all three.", tone: "warn" },
@@ -71,17 +77,42 @@ export function ClassroomCard({ status, message }: { status: Status; message?: s
         </>
       )}
 
+      {status?.state === "connected" && !status.courses_confirmed_at && (
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="font-medium text-zinc-900 dark:text-zinc-100">Check your courses</p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Classroom still lists courses from earlier terms. We&apos;ve guessed your current ones from this
+              term&apos;s course list; please check them and tick the courses you&apos;re taking.
+            </p>
+          </div>
+          <Link href="/courses" className={buttonClass}>
+            Choose my courses
+          </Link>
+        </div>
+      )}
+
       {status?.state === "connected" && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             <span className="font-medium text-zinc-900 dark:text-zinc-100">Classroom connected.</span>{" "}
             {!status.last_synced_at && "Your items will appear once the first update runs."}
           </p>
-          <form action={disconnectClassroom}>
-            <button className="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-              Disconnect
-            </button>
-          </form>
+          <div className="flex gap-4">
+            {status.courses_confirmed_at && (
+              <Link
+                href="/courses"
+                className="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              >
+                Change courses
+              </Link>
+            )}
+            <form action={disconnectClassroom}>
+              <button className="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                Disconnect
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
