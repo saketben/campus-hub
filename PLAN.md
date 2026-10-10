@@ -28,7 +28,8 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
   only in Vercel's settings. Only server code using the Supabase secret key
   touches it.
 - **D3. What to show.** Assignments due in the future or with no due date;
-  recent materials as pre-reads. Skip courses with no activity in ~60 days.
+  recent materials as pre-reads. Only courses the student ticked (updated
+  2026-10-10; replaces "skip courses with no activity in ~60 days").
   Store times in UTC, show IST; date-only items show as "due <date>".
 - **D4. Expiry (every 7 days in test mode).** A clear "Reconnect Classroom"
   message, and "Last updated <time>" always visible, so the list never looks
@@ -57,12 +58,20 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
 - [x] **5. Sync** (Claude). Fetch recent courses, assignments (no submissions)
       and materials; save as items with no duplicates; remove items deleted in
       Classroom; mark "needs reconnect" when Google says access expired.
-- [ ] **6. Home page list** (Claude). Due soon / no due date / recent pre-reads,
-      times in IST, link back to each Classroom post, "Last updated", sync on
-      open with "Updating…". Test at phone and laptop width.
-- [ ] **7. Background job** (Claude + Saket). A protected sync address on our
+      Result: 6 items for Saket; it showed the 60-day "active course" guess is
+      wrong (finished BADM still appeared), which led to step 6.
+- [ ] **6. Course picker** (Claude; Saket runs SQL). "Which of these are your
+      current courses?" with search and checkboxes, recently active courses
+      pre-ticked; changeable any time. Only ticked courses are synced, with no age
+      limit on their assignments (term-long projects stay visible). Replaces the
+      60-day rule in D3. Also save a short preview for each item (first lines of
+      the post + attachment names).
+- [ ] **7. Home page list** (Claude). Due soon / no due date / recent pre-reads,
+      with previews, times in IST, link back to each Classroom post, "Last
+      updated", sync on open with "Updating…". Test at phone and laptop width.
+- [ ] **8. Background job** (Claude + Saket). A protected sync address on our
       site; Supabase Cron calls it every 30 minutes with a secret stored in Vault.
-- [ ] **8. Test end to end** on phone and laptop with the Trichy ID, including
+- [ ] **9. Test end to end** on phone and laptop with the Trichy ID, including
       disconnecting; then wrap up (logs, tick Stage 3, next plan).
 
 Each step ends with a commit.

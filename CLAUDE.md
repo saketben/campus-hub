@@ -52,6 +52,15 @@ WhatsApp is out of scope (no usable API for personal accounts).
   placement deadline, other.
 - The website only **reads** items. Home summary, sections, and calendar are all views
   over the same items table. The calendar category checkboxes are filters on type.
+- Each student **picks their current courses** from their own Classroom course list
+  (recently active ones pre-ticked, with search). Only picked courses are synced, and
+  the same choice will drive the timetable. Items carry the course name, so a
+  per-subject view is just a filter.
+- **Planned sections (Stage 6, Saket's layout):** Home (summary of upcoming
+  deadlines), Classroom, Gmail, Timetable, Subjects (pick a course, see everything
+  for it). Every section gets a list/calendar toggle, so deadlines can be seen on a
+  calendar from anywhere. Whether to also have one all-in-one Calendar section is
+  decided when we build Stage 6.
 
 ## Trust rules (the most important design principle)
 AI extraction will never be 100% accurate, and one missed deadline loses a user.
@@ -76,15 +85,17 @@ Each stage ends working, tested, and committed.
       what is blocked. (All passed: see feasibility/RESULTS.md)
 - [x] **2. Skeleton:** Google sign-in, database, empty home page, deployed online
       (live at https://campushub-iimt.vercel.app)
-- [ ] **3. Classroom:** sync job + Classroom section (assignments and materials;
-      announcements wait for the Stage 5 AI step)
+- [ ] **3. Classroom:** course picker + sync job + simple home list (assignments and
+      materials with short previews; announcements wait for the Stage 5 AI step)
 - [ ] **4. Timetable + course outlines:** parser + elective/group picker + "my
       classes tomorrow" + session pre-reads from course outlines (depends on the
       academic office)
 - [ ] **5. Gmail:** sync + AI extraction (emails and Classroom announcements) +
       confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
       shipping.
-- [ ] **6. Views:** home summary, calendar with category filters
+- [ ] **6. Views:** sections (Home, Classroom, Gmail, Timetable, Subjects), each with
+      a list/calendar toggle and category filters; group far-off items as "Later
+      this term"
 - [ ] **7. Voice:** dictate to add or correct items (only if time allows)
 
 ## How we work
@@ -187,3 +198,12 @@ This becomes interview material, so keep it honest.
   scan, with a consistent "Session Number / Topics / Case / Readings" template;
   includes guest lectures; has no dates, so it pairs with the timetable (Stage 4).
   Outline = baseline, professor's Classroom update = override, both labelled.
+- 2026-10-10: First real sync showed the "skip courses inactive for 60 days" guess
+  was wrong (a finished course, BADM, still showed). Saket's fix: students tick
+  their current courses (recent ones pre-ticked). No age limit on assignments in
+  ticked courses, so term-long projects stay visible. Pre-reads also get a short
+  preview (first lines + attachment names), since the useful part ("Case: …") is
+  inside the post, not in its title.
+- 2026-10-10: Saket's section layout for Stage 6: Home, Classroom, Gmail, Timetable,
+  Subjects, with a calendar toggle in every section instead of only one Calendar
+  page (a combined Calendar section: decide in Stage 6).
