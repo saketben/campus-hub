@@ -12,8 +12,9 @@ function ago(iso: string) {
   return new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
 
-// "Last updated …" line. When the page opens it asks the server to check Classroom
-// (D1); if anything was fetched, it reloads the list.
+// "Last updated …" line. When the page opens, and whenever the student comes back to
+// the tab or app, it asks the server to check Classroom (D1); if anything was
+// fetched, it reloads the list. The server limits this to once a minute per student.
 export function SyncStatus({ lastSyncedAt }: { lastSyncedAt: string | null }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(true);
@@ -21,17 +22,25 @@ export function SyncStatus({ lastSyncedAt }: { lastSyncedAt: string | null }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/classroom/sync", { method: "POST" })
-      .then((res) => res.json())
-      .then(({ result }) => {
-        if (cancelled) return;
-        if (result === "synced" || result === "needs_reconnect") router.refresh();
-        setFailed(result === "failed");
-      })
-      .catch(() => !cancelled && setFailed(true))
-      .finally(() => !cancelled && setUpdating(false));
+    const check = () => {
+      setUpdating(true);
+      fetch("/api/classroom/sync", { method: "POST" })
+        .then((res) => res.json())
+        .then(({ result }) => {
+          if (cancelled) return;
+          if (result === "synced" || result === "needs_reconnect") router.refresh();
+          setFailed(result === "failed");
+        })
+        .catch(() => !cancelled && setFailed(true))
+        .finally(() => !cancelled && setUpdating(false));
+    };
+    const onReturn = () => document.visibilityState === "visible" && check();
+
+    check();
+    document.addEventListener("visibilitychange", onReturn);
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onReturn);
     };
   }, [router]);
 
