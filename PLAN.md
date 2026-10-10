@@ -71,8 +71,12 @@ outlines (Stage 4), the calendar view, confirm/dismiss buttons.
 - [x] **7. Home page list** (Claude). Due soon / no due date / recent pre-reads,
       with previews, times in IST, link back to each Classroom post, "Last
       updated", sync on open with "Updating…". Test at phone and laptop width.
-- [ ] **8. Background job** (Claude + Saket). A protected sync address on our
+- [x] **8. Background job** (Claude + Saket). A protected sync address on our
       site; Supabase Cron calls it every 30 minutes with a secret stored in Vault.
+      Confirmed: the first automatic run (03:00 IST, 11 Oct) refreshed Saket's list.
+      If it ever stops, check in SQL: `select * from cron.job_run_details order by
+      start_time desc limit 5;` and `select status_code, content from
+      net._http_response order by created desc limit 5;`
 - [ ] **9. Test end to end** on phone and laptop with the Trichy ID, including
       disconnecting; then wrap up (logs, tick Stage 3, next plan).
 
