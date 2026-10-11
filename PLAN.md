@@ -6,9 +6,8 @@ stage's plan.
 
 ## Stage 5: Gmail (and Classroom announcements)
 
-**Status:** DRAFT (2026-10-12). Saket agreed to Gmail next and to choosing the AI
-model by an accuracy test, keeping the pilot free if possible. The step list
-below still needs his approval before building starts.
+**Status:** approved by Saket (2026-10-12). In progress. Saket will choose the AI
+model himself (step 5) and tell Claude.
 
 **Goal:** deadlines, events and placement items hidden in emails and Classroom
 announcements appear on their own, each linked back to the original, with
@@ -37,10 +36,15 @@ sections/calendar views (Stage 6).
 
 ### Steps
 
-- [ ] **1. Measure real email volume** (Claude writes a throwaway script, Saket
+- [x] **1. Measure real email volume** (Claude writes a throwaway script, Saket
       signs in). Read-only: emails per day and top senders over the last 30 days,
       counts only, nothing stored. Turns the cost estimate into real numbers and
       sizes the noise filter.
+      Result (`feasibility/RESULTS-email-volume.md`): ~16 emails/day, of which
+      ~10–11 need the AI (iimtrichy.ac.in + the edtex.in placement portal); ~1/3
+      is noise skippable by sender. Haiku 5.5 ≈ $0.23 per student per month.
+      **Open question:** shortlists often arrive as attachments; reading
+      attachments is not in this stage's plan yet (decide later).
 - [ ] **2. Set up both AI providers for free** (Saket, guided). Anthropic Console:
       claim the new-account credit, don't add a card. Groq: free account, switch on
       zero data retention. Keys go in `.env.local` only, never in chat or Git.

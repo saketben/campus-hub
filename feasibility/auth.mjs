@@ -11,7 +11,7 @@ import { google } from "googleapis";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_FILE = path.join(here, "secrets", "client_secret.json");
-const TOKEN_FILE = path.join(here, "secrets", "token.json");
+const tokenPath = (name) => path.join(here, "secrets", name);
 
 // Read-only permissions, the same five listed on the consent screen.
 export const SCOPES = [
@@ -22,15 +22,18 @@ export const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
 ];
 
-export async function getAuthClient({ fresh = false } = {}) {
+// `scopes` and `tokenName` let a script ask for fewer permissions (e.g. Gmail only)
+// and keep its sign-in separate from the Stage 1 one.
+export async function getAuthClient({ fresh = false, scopes = SCOPES, tokenName = "token.json" } = {}) {
   const { installed } = JSON.parse(fs.readFileSync(CLIENT_FILE, "utf8"));
-  if (!fresh && fs.existsSync(TOKEN_FILE)) {
+  const tokenFile = tokenPath(tokenName);
+  if (!fresh && fs.existsSync(tokenFile)) {
     const client = new google.auth.OAuth2(installed.client_id, installed.client_secret);
-    client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_FILE, "utf8")));
+    client.setCredentials(JSON.parse(fs.readFileSync(tokenFile, "utf8")));
     return client;
   }
   if (!fresh) throw new Error("Not signed in yet. Run `npm run signin` first.");
-  return signIn(installed);
+  return signIn(installed, scopes, tokenFile);
 }
 
 // Google's error code plus message, which is what we need to record in the results.
@@ -39,7 +42,7 @@ export function describeError(e) {
   return `${e.code ?? e.status ?? "?"} ${reason} - ${e.message}`.trim();
 }
 
-function signIn(installed) {
+function signIn(installed, scopes, tokenFile) {
   const state = crypto.randomBytes(16).toString("hex");
   let client;
 
@@ -61,7 +64,7 @@ function signIn(installed) {
       try {
         const { tokens } = await client.getToken(url.searchParams.get("code"));
         client.setCredentials(tokens);
-        fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));
+        fs.writeFileSync(tokenFile, JSON.stringify(tokens, null, 2));
         resolve(client);
       } catch (e) {
         reject(e);
@@ -74,7 +77,7 @@ function signIn(installed) {
       const authUrl = client.generateAuthUrl({
         access_type: "offline",
         prompt: "select_account consent",
-        scope: SCOPES,
+        scope: scopes,
         state,
       });
       console.log("Opening Google sign-in in your browser. If it doesn't open, paste this link:\n\n" + authUrl + "\n");
