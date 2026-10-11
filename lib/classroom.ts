@@ -13,6 +13,16 @@ const DAY = 24 * 60 * 60 * 1000;
 const RECENT_MATERIAL_DAYS = 14; // pre-reads posted in the last two weeks
 const MIN_SECONDS_BETWEEN_SYNCS = 60; // at most once a minute per student (D1)
 const PREVIEW_CHARS = 200;
+const COURSES_AT_A_TIME = 6;
+
+// Runs `task` on every entry, at most `limit` at a time, keeping the original order.
+async function inBatches<T, R>(list: T[], limit: number, task: (entry: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < list.length; i += limit) {
+    results.push(...(await Promise.all(list.slice(i, i + limit).map(task))));
+  }
+  return results;
+}
 
 type Course = { id: string; name: string };
 type DueDate = { year: number; month: number; day: number };
@@ -105,33 +115,47 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
 
   try {
     const courses = await getAll<Course>(token, "/courses?studentId=me&courseStates=ACTIVE", "courses");
-    const { data: known } = await admin.from("student_courses").select("course_id, selected").eq("user_id", userId);
-    const picked = new Map((known ?? []).map((c) => [c.course_id, c.selected as boolean]));
+    const { data: known } = await admin
+      .from("student_courses")
+      .select("course_id, selected, last_activity_at")
+      .eq("user_id", userId);
+    const knownById = new Map((known ?? []).map((c) => [c.course_id as string, c]));
 
-    const items: ({ source_id: string } & Record<string, unknown>)[] = [];
-    const courseRows: Record<string, unknown>[] = [];
+    // Which courses are ticked. Until the student has confirmed their picks, we guess
+    // from this term's official course list; after that their choice wins, and only
+    // courses new to us get a guess.
+    const ticked = (course: Course) => {
+      const guess = isCurrentTermCourse(course.name);
+      return status.courses_confirmed_at ? ((knownById.get(course.id)?.selected as boolean | undefined) ?? guess) : guess;
+    };
 
-    for (const course of courses) {
+    // Only ticked courses are fetched, several at a time; unticked ones keep the
+    // "last post" date we already had. This is what keeps Save and Connect quick.
+    const fetched = await inBatches(courses.filter(ticked), COURSES_AT_A_TIME, async (course) => {
       const [work, materials] = await Promise.all([
         getAll<CourseWork>(token, `/courses/${course.id}/courseWork`, "courseWork"),
         getAll<Post>(token, `/courses/${course.id}/courseWorkMaterials`, "courseWorkMaterial"),
       ]);
+      return { course, work, materials };
+    });
+    const fetchedById = new Map(fetched.map((f) => [f.course.id, f]));
 
-      // Remember every course for the picker. Until the student has confirmed their
-      // picks, we guess from this term's official course list; after that their
-      // choice wins, and only courses new to us get a guess.
-      const lastActivity = Math.max(0, ...[...work, ...materials].map((x) => Date.parse(x.updateTime)));
-      const guess = isCurrentTermCourse(course.name);
-      const selected = status.courses_confirmed_at ? (picked.get(course.id) ?? guess) : guess;
-      courseRows.push({
+    const courseRows = courses.map((course) => {
+      const f = fetchedById.get(course.id);
+      const lastActivity = f ? Math.max(0, ...[...f.work, ...f.materials].map((x) => Date.parse(x.updateTime))) : 0;
+      return {
         user_id: userId,
         course_id: course.id,
         course_name: course.name,
-        selected,
-        last_activity_at: lastActivity ? new Date(lastActivity).toISOString() : null,
-      });
-      if (!selected) continue;
+        selected: Boolean(f),
+        last_activity_at: lastActivity
+          ? new Date(lastActivity).toISOString()
+          : (knownById.get(course.id)?.last_activity_at ?? null),
+      };
+    });
 
+    const items: ({ source_id: string } & Record<string, unknown>)[] = [];
+    for (const { course, work, materials } of fetched) {
       for (const w of work) {
         const due = dueAt(w);
         // Upcoming assignments, plus ones with no due date (shown, not hidden: trust rule).
