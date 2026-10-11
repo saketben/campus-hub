@@ -85,7 +85,7 @@ Each stage ends working, tested, and committed.
       what is blocked. (All passed: see feasibility/RESULTS.md)
 - [x] **2. Skeleton:** Google sign-in, database, empty home page, deployed online
       (live at https://campushub-iimt.vercel.app)
-- [ ] **3. Classroom:** course picker + sync job + simple home list (assignments and
+- [x] **3. Classroom:** course picker + sync job + simple home list (assignments and
       materials with short previews; announcements wait for the Stage 5 AI step)
 - [ ] **4. Timetable + course outlines:** parser + elective/group picker + "my
       classes tomorrow" + session pre-reads from course outlines (depends on the
@@ -172,6 +172,15 @@ Update at the end of every session: what was finished, what's next.
   **Next:** finish step 9 (test "Change courses", then Disconnect and Connect
   again), wrap up Stage 3 and draft the next stage plan. After 2026-10-16, check
   the 7-day expiry: the card should switch to "Reconnect Classroom".
+- 2026-10-11, session 6 (cont.): **Stage 3 done.** All step 9 tests passed on the
+  live site (change courses, disconnect + reconnect). Added "Watching: <courses>"
+  above the list; the picker shows this term's courses and hides earlier terms
+  behind a link. Speed: only ticked courses are fetched (6 at a time), the site's
+  server code runs in Mumbai (`vercel.json` → `bom1`), and Save no longer waits for
+  Google (the home page fetches right after).
+  **Next:** choose the next stage (see PLAN.md: Stage 4 needs the timetable feed;
+  Stage 5 Gmail doesn't). After 2026-10-16, check the 7-day expiry: the Classroom
+  card should switch to "Reconnect Classroom".
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -236,3 +245,11 @@ This becomes interview material, so keep it honest.
   last term's MDT; missed ADPM, which only posts announcements). Saket supplied the
   official Term V elective list; matching Classroom names to it got 5 of 5. The list
   is swapped each term (code, title, area only; no faculty details).
+- 2026-10-11: Saket flagged a slow "Save my courses". Causes: we fetched all 23
+  courses one by one; Vercel ran our server code in Washington, D.C. by default
+  while the database is in Mumbai; and Google Classroom itself takes 3–7 s.
+  Fixes: fetch only ticked courses, 6 at a time; pin Vercel to Mumbai (free plan
+  allows one region); Save records picks instantly and the page fetches after.
+- 2026-10-11: Added "Watching: <courses>" above the list (Saket's suggestion after
+  an empty list looked worrying) and hid earlier terms' courses in the picker
+  behind "Show courses from earlier terms".
