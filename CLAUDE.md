@@ -77,7 +77,9 @@ AI extraction will never be 100% accurate, and one missed deadline loses a user.
 - A student can disconnect and delete all their data.
 
 ## Build stages
-Each stage ends working, tested, and committed.
+Each stage ends working, tested, and committed. **Order changed (2026-10-11): Stage 5
+(Gmail) comes before Stage 4 (Timetable), which waits until there's a working
+product to show the academic office.**
 - [x] **0. Setup:** accounts, empty project running locally
       (Anthropic API key postponed to Stage 5)
 - [x] **1. Feasibility checks:** throwaway scripts: sign in with a Trichy ID, fetch
@@ -253,3 +255,14 @@ This becomes interview material, so keep it honest.
 - 2026-10-11: Added "Watching: <courses>" above the list (Saket's suggestion after
   an empty list looked worrying) and hid earlier terms' courses in the picker
   behind "Show courses from earlier terms".
+- 2026-10-11: Gmail (Stage 5) before Timetable (Stage 4). Saket won't approach the
+  academic office until there's a working product to show, and without their feed
+  there's nothing legitimate to check (the file is view-only by design). Gmail has
+  no outside dependency, is the riskiest part (AI accuracy), and also reads
+  Classroom announcements (fixing ADPM, which only posts announcements).
+- 2026-10-11: First AI cost estimate (list prices 2026-10-06; ~20 emails + 3
+  announcements per student per day): per month for 25 students, Haiku 5.5 ~$10,
+  Sonnet 5.5 ~$190, Opus 5.5 ~$385, before savings. Big lever: batch-wide emails
+  are extracted once and shared, so cost scales with unique emails, not students.
+  Model to be chosen by accuracy on ~100 hand-labelled emails, cheapest that meets
+  the bar. Real email volume to be measured first.
