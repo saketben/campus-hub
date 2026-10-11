@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { revokeToken } from "@/lib/google";
-import { syncClassroom } from "@/lib/classroom";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -43,7 +42,9 @@ export async function disconnectClassroom() {
   redirect("/?classroom=disconnected");
 }
 
-// Save the student's ticked courses, then refresh their items to match.
+// Save the student's ticked courses. Items from unticked courses go straight away;
+// items from newly ticked ones are fetched by the home page right after
+// ("Updating from Classroom…"), so the Save button never waits on Google.
 export async function saveCourses(formData: FormData) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -56,12 +57,22 @@ export async function saveCourses(formData: FormData) {
   if (picked.length > 0) {
     await admin.from("student_courses").update({ selected: true }).eq("user_id", userId).in("course_id", picked);
   }
+  const { data: unticked } = await admin
+    .from("student_courses")
+    .select("course_name")
+    .eq("user_id", userId)
+    .eq("selected", false);
+  const names = (unticked ?? []).map((c) => c.course_name as string);
+  if (names.length > 0) {
+    await admin.from("items").delete().eq("user_id", userId).eq("source", "classroom").in("course_name", names);
+  }
+  // Clearing last_attempt_at lets the home page's check run immediately,
+  // instead of waiting out the once-a-minute limit.
   await admin
     .from("sync_status")
-    .update({ courses_confirmed_at: new Date().toISOString() })
+    .update({ courses_confirmed_at: new Date().toISOString(), last_attempt_at: null })
     .eq("user_id", userId)
     .eq("source", "classroom");
 
-  await syncClassroom(userId, { force: true });
   redirect("/?classroom=courses");
 }

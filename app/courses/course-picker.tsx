@@ -24,7 +24,7 @@ function SaveButton() {
       disabled={pending}
       className="h-11 w-full rounded-lg bg-zinc-900 px-5 font-medium text-white hover:bg-zinc-700 disabled:opacity-60 sm:w-auto dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
     >
-      {pending ? "Saving and updating…" : "Save my courses"}
+      {pending ? "Saving…" : "Save my courses"}
     </button>
   );
 }
