@@ -81,7 +81,16 @@ sections/calendar views (Stage 6).
       (type, title, date/time in IST, **end time when given** (Saket: PPTs and
       lectures often say "1:45 PM – 3:00 PM"; needs a new `ends_at` column),
       confidence, link back to the email). Review the "other" items from labelling
-      (Saket tags them `[exam]`, `[form]`, …) to decide on new item types. Low
+      (Saket tags them `[exam]`, `[form]`, …) to decide on new item types.
+      Found while labelling (Saket):
+      - **Replies that change a deadline** (same Gmail thread) must **update** the
+        existing item, not add a second one; read the newest reply, not old quoted
+        text below it.
+      - **Group-specific slots** ("Gr.1 2:15 pm, Gr.2 4:00 pm"): until students pick
+        their group (Stage 4 picker), show every slot with its group in the title;
+        afterwards, only theirs.
+      - **One event = one item** (a guest lecture in a course's slot is a
+        guest_lecture, not also a class). Low
       confidence shows as "Possible deadline: confirm?". A daily per-student cap
       stops runaway cost.
 - [ ] **8. Confirm / dismiss** (Claude). One or two taps on the home list.
