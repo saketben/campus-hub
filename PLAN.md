@@ -45,16 +45,31 @@ sections/calendar views (Stage 6).
       is noise skippable by sender. Haiku 5.5 ≈ $0.23 per student per month.
       **Open question:** shortlists often arrive as attachments; reading
       attachments is not in this stage's plan yet (decide later).
-- [ ] **2. Set up both AI providers for free** (Saket, guided). Anthropic Console:
+- [x] **2. Set up both AI providers for free** (Saket, guided). Anthropic Console:
       claim the new-account credit, don't add a card. Groq: free account, switch on
       zero data retention. Keys go in `.env.local` only, never in chat or Git.
+      Result: Groq key works (`GROQ_API_KEY`), Zero Data Retention on. Anthropic
+      account exists but has **no free credit** ($0.00; credits are prepaid from $5,
+      expire after 1 year), so nothing bought and no key yet. **Decision: test Groq
+      first; buy $5 of Anthropic credit to test Claude Haiku 5.5 only if Groq misses
+      real deadlines.** Groq free limits per model (Saket's console): 1,000
+      requests/day, 8,000 tokens/minute, **200,000 tokens/day** (≈ 64 email reads a
+      day, ~5 students per model). Models: gpt-oss-120b, gpt-oss-20b (production);
+      qwen3.8-27b is preview-only, so excluded. Paid prices per 1M tokens (Groq docs):
+      gpt-oss-20b $0.075/$0.30, gpt-oss-120b $0.15/$0.60; Haiku 5.5 $0.10/$0.50.
 - [ ] **3. Build the labelled test set** (Claude prepares, Saket labels). A local,
       Git-ignored file of ~100 recent emails (plus some Classroom announcements),
       chosen to include one-off ones like shortlists. Saket marks, for each, the
       real deadlines/events (or "none"). Stays on his laptop.
-- [ ] **4. Run the accuracy test.** Same instructions to both models. Score:
-      deadlines missed (most important), false alarms, wrong dates/times, and cost
-      per email. Write the results to `feasibility/` (no email content).
+- [ ] **4. Run the accuracy test.** Same instructions to each model (gpt-oss-20b
+      and gpt-oss-120b on Groq first; Haiku 5.5 only if needed). Score: deadlines
+      missed (most important), false alarms, wrong dates/times, and cost per email.
+      Also test Saket's **subject filter**: free rules for automated mails (e.g. the
+      placement portal's "you have applied" confirmations) plus a quick AI look at
+      sender + subject only, reading the full email whenever unsure. Use it only if
+      it skips **zero** real deadlines in the test set (it would save ~30% of cost).
+      The test spreads over 2 days to fit Groq's 200K tokens/day. Write the results
+      to `feasibility/` (no email content).
 - [ ] **5. Choose the model** (Saket). Record the decision and the numbers in the
       decision log; update CLAUDE.md's tech stack if Groq wins.
 - [ ] **6. Connect Gmail + sync** (Claude). Separate read-only Gmail permission;
