@@ -78,7 +78,10 @@ sections/calendar views (Stage 6).
       Classroom announcements join the same path (adds the announcements permission,
       so students reconnect Classroom once).
 - [ ] **7. AI reading → items** (Claude). Each email becomes zero or more items
-      (type, title, date/time in IST, confidence, link back to the email). Low
+      (type, title, date/time in IST, **end time when given** (Saket: PPTs and
+      lectures often say "1:45 PM – 3:00 PM"; needs a new `ends_at` column),
+      confidence, link back to the email). Review the "other" items from labelling
+      (Saket tags them `[exam]`, `[form]`, …) to decide on new item types. Low
       confidence shows as "Possible deadline: confirm?". A daily per-student cap
       stops runaway cost.
 - [ ] **8. Confirm / dismiss** (Claude). One or two taps on the home list.

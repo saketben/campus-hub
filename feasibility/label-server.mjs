@@ -22,7 +22,9 @@ const page = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .meta { font-size: 14px; opacity: .8; } .tag { border: 1px solid var(--b); border-radius: 6px; padding: 1px 6px; font-size: 12px; }
   pre { white-space: pre-wrap; word-break: break-word; border: 1px solid var(--b); border-radius: 8px; padding: 12px; max-height: 45vh; overflow: auto; font: 14px/1.45 system-ui, sans-serif; }
-  .row { display: grid; grid-template-columns: 2fr 1.3fr 1fr .8fr auto; gap: 6px; margin: 6px 0; }
+  .row { display: grid; grid-template-columns: 2fr 1.3fr 1fr .8fr .8fr auto; gap: 6px; margin: 6px 0; }
+  .cols { display: grid; grid-template-columns: 2fr 1.3fr 1fr .8fr .8fr auto; gap: 6px; font-size: 12px; opacity: .7; }
+  @media (max-width: 640px) { .cols { display: none; } }
   @media (max-width: 640px) { .row { grid-template-columns: 1fr 1fr; } }
   input, select, button { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--b); }
   button { cursor: pointer; } .primary { background: #2563eb; color: white; border: 0; } .none { background: #16a34a; color: white; border: 0; }
@@ -34,6 +36,7 @@ const page = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 Use the email's own date to turn "tomorrow" into a real date.</p>
 <div id="item"></div>
 <h3>Items in this email</h3>
+<div class="cols"><span>Title</span><span>Type</span><span>Date</span><span>Start time</span><span>End time (if given)</span><span></span></div>
 <div id="rows"></div>
 <div class="bar">
   <button onclick="addRow()">+ Add another item</button>
@@ -70,14 +73,15 @@ function addRow(v = {}) {
   const d = document.createElement("div"); d.className = "row";
   d.innerHTML = '<input placeholder="Title, e.g. Axis Bank PPT" value="' + esc(v.title) + '">' +
     "<select>" + TYPES.map((t) => "<option" + (v.type === t ? " selected" : "") + ">" + t + "</option>").join("") + "</select>" +
-    '<input type="date" value="' + esc(v.date) + '"><input type="time" value="' + esc(v.time) + '">' +
+    '<input type="date" value="' + esc(v.date) + '"><input type="time" title="Start time" value="' + esc(v.time) + '">' +
+    '<input type="time" title="End time (if given)" value="' + esc(v.end_time) + '">' +
     '<button title="Remove" onclick="this.parentElement.remove()">✕</button>';
   document.getElementById("rows").appendChild(d);
 }
 async function save(none) {
   const rows = [...document.querySelectorAll("#rows .row")].map((r) => {
-    const [title, type, date, time] = r.querySelectorAll("input, select");
-    return { title: title.value.trim(), type: type.value, date: date.value, time: time.value };
+    const [title, type, date, time, endTime] = r.querySelectorAll("input, select");
+    return { title: title.value.trim(), type: type.value, date: date.value, time: time.value, end_time: endTime.value };
   }).filter((r) => r.title);
   if (!none && rows.length === 0) { alert('Add at least one item with a title, or click "Nothing here".'); return; }
   labels[items[i].id] = { items: none ? [] : rows, labelled_at: new Date().toISOString() };
