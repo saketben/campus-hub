@@ -104,6 +104,9 @@ Each step ends with a commit.
 
 ### Reminders
 
-- After 2026-10-16: check the 7-day test-mode expiry. The Classroom card should
-  switch to "Reconnect Classroom" (the same will apply to Gmail).
+- After ~05:40 IST on 2026-10-17 (7 days after Classroom was connected at 05:37 IST
+  on 10 Oct): check the test-mode expiry. Expect `sync_status.state` to become
+  `needs_reconnect` and the Classroom card to show "Reconnect Classroom"; then
+  reconnect and confirm items come back. Same will apply to Gmail. (Checked
+  2026-10-16 00:49 IST: still connected, last sync 00:44, no errors.)
 - When Term VI's elective list is published, swap it into `lib/term-courses.ts`.
