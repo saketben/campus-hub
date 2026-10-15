@@ -1,5 +1,6 @@
 // Stage 5, step 4: score a model's answers against Saket's labels.
-//   node 7-score.mjs <model>
+//   node 7-score.mjs <run>   e.g. openai/gpt-oss-120b (round 1)
+//                                 groq-openai/gpt-oss-120b-round2
 // Prints totals only. A per-item report (with titles) goes to
 // secrets/testset/score-<model>.txt for review; it stays on this laptop.
 import fs from "node:fs";
@@ -14,8 +15,13 @@ const items = JSON.parse(fs.readFileSync(path.join(DIR, "items.json"), "utf8"));
 const labels = JSON.parse(fs.readFileSync(path.join(DIR, "labels.json"), "utf8"));
 const results = JSON.parse(fs.readFileSync(path.join(DIR, `results-${safe}.json`), "utf8"));
 
-// Paid prices per million tokens (Groq docs, 2026-10), for "what would this cost".
-const PRICES = { "openai/gpt-oss-20b": [0.075, 0.3], "openai/gpt-oss-120b": [0.15, 0.6] };
+// Paid prices per million tokens (in, out), for "what would this cost".
+// Groq docs and Anthropic list prices, 2026-10. Check again before relying on them.
+const PRICES = {
+  "gpt-oss-20b": [0.075, 0.3],
+  "gpt-oss-120b": [0.15, 0.6],
+  "claude-haiku-5-5": [0.1, 0.5],
+};
 
 const STOP = new Set("the a an of for to and in on at by with is your from session".split(" "));
 const words = (s) =>
@@ -102,7 +108,7 @@ items.forEach((item, idx) => {
 const usage = Object.values(results).map((r) => r.usage ?? {});
 const tokensIn = usage.reduce((s, u) => s + (u.prompt_tokens ?? 0), 0);
 const tokensOut = usage.reduce((s, u) => s + (u.completion_tokens ?? 0), 0);
-const [pin, pout] = PRICES[model] ?? [0, 0];
+const [pin, pout] = Object.entries(PRICES).find(([name]) => model.includes(name))?.[1] ?? [0, 0];
 const answered = Object.keys(results).length;
 const costPer = answered ? ((tokensIn * pin + tokensOut * pout) / 1e6 / answered) : 0;
 const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}% (${a}/${b})` : "n/a");
