@@ -31,13 +31,14 @@ const similarity = (a, b) => {
   const common = [...A].filter((w) => B.has(w)).length;
   return common / Math.max(1, Math.min(A.size, B.size));
 };
-const minutes = (t) => (/^\d{1,2}:\d{2}$/.test(t ?? "") ? Number(t.split(":")[0]) * 60 + Number(t.split(":")[1]) : null);
+// Accepts HH:MM and HH:MM:SS (models sometimes write 23:59:59).
+const minutes = (t) => (/^\d{1,2}:\d{2}(:\d{2})?$/.test(t ?? "") ? Number(t.split(":")[0]) * 60 + Number(t.split(":")[1]) : null);
 const timeClose = (a, b) => {
   const x = minutes(a), y = minutes(b);
   return x !== null && y !== null && Math.abs(x - y) <= 5; // "2 hours from now" can't be exact to the minute
 };
 
-const t = { labelled: 0, found: 0, dateOk: 0, dated: 0, timeOk: 0, timed: 0, extra: 0, extraInNothing: 0, nothingItems: 0, nothingClean: 0, placementLabelled: 0, placementFound: 0, unanswered: 0 };
+const t = { extraFromMarketing: 0, labelled: 0, found: 0, dateOk: 0, dated: 0, timeOk: 0, timed: 0, extra: 0, extraInNothing: 0, nothingItems: 0, nothingClean: 0, placementLabelled: 0, placementFound: 0, unanswered: 0 };
 const report = [];
 
 items.forEach((item, idx) => {
@@ -87,6 +88,8 @@ items.forEach((item, idx) => {
 
   const extras = got.filter((p) => !p.used);
   t.extra += extras.length;
+  // Marketing senders are skipped by the noise filter before the AI in the real app.
+  if (item.group === "other_sender") t.extraFromMarketing += extras.length;
   if (want.length === 0) {
     t.nothingItems++;
     if (got.length === 0) t.nothingClean++;
@@ -111,6 +114,7 @@ console.log(`Right date (when found): ${pct(t.dateOk, t.dated)}`);
 console.log(`Right time (when found): ${pct(t.timeOk, t.timed)}`);
 console.log(`"Nothing here" kept empty: ${pct(t.nothingClean, t.nothingItems)}`);
 console.log(`False alarms: ${t.extra} extra items (${t.extraInNothing} in "Nothing here" emails)`);
+console.log(`  of which from marketing senders (skipped before AI in the real app): ${t.extraFromMarketing}`);
 console.log(`Tokens: ${tokensIn} in + ${tokensOut} out; paid cost ≈ $${costPer.toFixed(6)} per email`);
 fs.writeFileSync(path.join(DIR, `score-${safe}.txt`), report.join("\n\n"));
 console.log(`Details for review: secrets/testset/score-${safe}.txt (${report.length} items with a difference)`);

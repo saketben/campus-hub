@@ -28,6 +28,7 @@ const items = JSON.parse(fs.readFileSync(path.join(DIR, "items.json"), "utf8"));
 const outFile = path.join(DIR, `results-${model.replace(/[^a-z0-9.-]/gi, "_")}.json`);
 const results = fs.existsSync(outFile) ? JSON.parse(fs.readFileSync(outFile, "utf8")) : {};
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let jsonFailures = 0;
 
 async function ask(item) {
   for (let attempt = 1; attempt <= 6; attempt++) {
@@ -58,6 +59,18 @@ async function ask(item) {
     }
     // 429 = slow down (per-minute limit) or out of daily tokens.
     const message = body.error?.message ?? JSON.stringify(body);
+    // 413 = one message is bigger than the free tier's tokens-per-minute limit. It can
+    // never succeed on this plan, so record it as a failure and move on.
+    if (res.status === 413) {
+      return { answer: { items: [], failed: "too large for free tier" }, usage: {}, seconds: 0 };
+    }
+    // The model wrote invalid JSON: retry (as the real app would); after 3 tries,
+    // record a failure, which the scorer counts as missing everything in the item.
+    if (res.status === 400 && /validate JSON/i.test(message)) {
+      jsonFailures++;
+      if (attempt < 3) continue;
+      return { answer: { items: [], failed: "invalid JSON 3 times" }, usage: {}, seconds: (Date.now() - started) / 1000 };
+    }
     if (res.status === 429 && /per day|TPD|RPD/i.test(message)) return { stop: `Daily limit reached: ${message}` };
     if (res.status === 429 || res.status >= 500) {
       const wait = Number(res.headers.get("retry-after")) || 10 * attempt;
@@ -87,3 +100,4 @@ for (const item of items) {
 const all = Object.values(results);
 const tokens = all.reduce((s, r) => s + (r.usage?.total_tokens ?? 0), 0);
 console.log(`\n${model}: ${all.length}/${items.length} items answered, ${tokens} tokens used so far.`);
+console.log(`Invalid-JSON answers this run (retried): ${jsonFailures}; items that failed all retries: ${all.filter((r) => r.answer?.failed).length}`);
