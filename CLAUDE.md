@@ -61,6 +61,12 @@ WhatsApp is out of scope (no usable API for personal accounts).
   for it). Every section gets a list/calendar toggle, so deadlines can be seen on a
   calendar from anywhere. Whether to also have one all-in-one Calendar section is
   decided when we build Stage 6.
+- **Category filters (Stage 6, Saket's idea):** checkboxes such as Placements ·
+  Courses & classes · Clubs & committees · Other, so each student chooses what they
+  see. Placements are on by default, pinned and highlighted so they never get lost
+  under club events. Filters only hide, never delete, and say so ("12 club items
+  hidden"). Items need to carry who they're from (course, club, committee,
+  placement cell) for this and for the Subjects view.
 
 ## Trust rules (the most important design principle)
 AI extraction will never be 100% accurate, and one missed deadline loses a user.
@@ -96,8 +102,8 @@ product to show the academic office.**
       confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
       shipping.
 - [ ] **6. Views:** sections (Home, Classroom, Gmail, Timetable, Subjects), each with
-      a list/calendar toggle and category filters; group far-off items as "Later
-      this term"
+      a list/calendar toggle and category filters (placements pinned and on by
+      default); group far-off items as "Later this term"
 - [ ] **7. Voice:** dictate to add or correct items (only if time allows)
 
 ## How we work
@@ -266,3 +272,13 @@ This becomes interview material, so keep it honest.
   are extracted once and shared, so cost scales with unique emails, not students.
   Model to be chosen by accuracy on ~100 hand-labelled emails, cheapest that meets
   the bar. Real email volume to be measured first.
+- 2026-10-16: Labelled 100 real items (75 IIM/placement emails, 10 other-sender, 15
+  Classroom announcements); Claude cross-checked every one. Common slips: deadline
+  times typed as end times, relative dates ("2 hours from now", "tomorrow") left
+  blank, "apply by" placement items typed as activities, and items skipped because
+  of personal interest. Principle agreed: **label everything a batch-mate might
+  want; category filters handle personal taste.** Mid-course feedback forms are not
+  items. The 10 other-sender emails contained nothing official, which supports
+  skipping marketing senders without AI.
+- 2026-10-16: Saket's category-filter idea (placements / courses / clubs / other)
+  added to Stage 6, with placements pinned and filters that only hide.

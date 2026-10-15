@@ -57,7 +57,11 @@ sections/calendar views (Stage 6).
       day, ~5 students per model). Models: gpt-oss-120b, gpt-oss-20b (production);
       qwen3.8-27b is preview-only, so excluded. Paid prices per 1M tokens (Groq docs):
       gpt-oss-20b $0.075/$0.30, gpt-oss-120b $0.15/$0.60; Haiku 5.5 $0.10/$0.50.
-- [ ] **3. Build the labelled test set** (Claude prepares, Saket labels). A local,
+- [x] **3. Build the labelled test set** (Claude prepares, Saket labels).
+      Done 2026-10-16: 100 items labelled, cross-checked by Claude, corrections
+      approved and applied (original kept as `labels.original.json`). 46 items with
+      something to act on (54 entries, 48 dated), 54 "Nothing here". Open: whether
+      "check your marks, report corrections by …" emails (#32, #59, #64) count. A local,
       Git-ignored file of ~100 recent emails (plus some Classroom announcements),
       chosen to include one-off ones like shortlists. Saket marks, for each, the
       real deadlines/events (or "none"). Stays on his laptop.
