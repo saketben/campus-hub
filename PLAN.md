@@ -117,6 +117,13 @@ Each step ends with a commit.
 
 ### Reminders
 
+- **Saket's idea (2026-10-16): use both free Groq models.** Each has its own
+  200K-tokens/day allowance. Classroom announcements (short, simple; ~20% of AI
+  reads) could go to gpt-oss-20b, and 20b could be a backup when 120b's allowance is
+  used up. Caution: 20b broke (invalid JSON) on multi-deadline emails. Check with
+  existing data: score round-1 20b vs 120b on announcements only (items #86–100),
+  then decide. Expected gain: ~9 → ~11 students free.
+
 - **When Stage 5 ends: remind Saket to start a new Claude session** (this one's
   context is nearly full). Make sure CLAUDE.md and PLAN.md are fully up to date
   first, so the new session can continue from them alone.
