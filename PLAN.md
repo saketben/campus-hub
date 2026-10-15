@@ -76,14 +76,18 @@ sections/calendar views (Stage 6).
       to `feasibility/` (no email content).
 - [x] **5. Choose the model** (Saket). **Chosen 2026-10-16: Groq
       `openai/gpt-oss-120b`** (results in `feasibility/RESULTS-accuracy.md`).
-      **Still to do before step 6:** tighten the instructions in
-      `feasibility/extract-prompt.mjs` (one item per session's pre-reads, not per
-      document; no separate "Day 2" items or class items beside a pre-read;
-      "applications now open" notices count even without a deadline; enforce the
-      mid-course-feedback rule; no duplicate "check marks" items), re-run
-      `node feasibility/6-run-test.mjs openai/gpt-oss-120b` after deleting/renaming
-      its old results file (needs Groq's daily allowance to reset: run on or after
-      17 Oct ~01:30 IST), compare with round 1, then test Saket's subject filter. Record the decision and the numbers in the
+      Instructions tightened (now in `lib/ai-reader/prompt.ts`, the one copy used
+      by the app and the tests). **Round 2 started 2026-10-16** and stops at Groq's
+      daily cap; **to finish it** (on or after 17 Oct ~01:30 IST), run from the
+      project folder:
+      `npx tsx --env-file=.env.local --conditions=react-server feasibility/6-run-test.mts groq openai/gpt-oss-120b --tag round2`
+      then score with `node feasibility/7-score.mjs groq-openai/gpt-oss-120b-round2`
+      and compare with round 1 (`node feasibility/7-score.mjs openai/gpt-oss-120b`).
+      Then test Saket's subject filter.
+      **Switching to Claude Haiku later:** add `ANTHROPIC_API_KEY` (after buying
+      credit), run the same test with `... 6-run-test.mts anthropic claude-haiku-5-5
+      --tag check`, compare, then set `AI_PROVIDER=anthropic` in `.env.local` and
+      Vercel. Record the decision and the numbers in the
       decision log; update CLAUDE.md's tech stack if Groq wins.
 - [ ] **6. Connect Gmail + sync** (Claude). Separate read-only Gmail permission;
       fetch new emails since the last check; skip obvious noise (job portals,

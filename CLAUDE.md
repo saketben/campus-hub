@@ -315,3 +315,9 @@ This becomes interview material, so keep it honest.
   outside email was marketing. Bulk headers can't be used on college mail (260 of
   267 IIM emails carry them via mailing lists). Leak: ~12 Unstop emails a month →
   small built-in sender list + a one-tap "never read this sender".
+- 2026-10-16: Plan: pilot with 6–7 of Saket's friends on Groq gpt-oss-120b (free tier
+  fits ~9 students). When scaling, move to Claude Haiku 5.5 (estimated ~₹4 cheaper
+  per student per month), but only after it passes the same 100-item accuracy
+  test (~$0.03) and prices are re-checked. Made the switch a settings change:
+  `lib/ai-reader` holds one copy of the instructions with a Groq and an Anthropic
+  connector; `AI_PROVIDER=anthropic` + `ANTHROPIC_API_KEY` switches it.
