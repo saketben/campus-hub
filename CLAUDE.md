@@ -40,7 +40,9 @@ WhatsApp is out of scope (no usable API for personal accounts).
 - **Next.js** website, hosted on **Vercel**
 - **Supabase** for the database and Google sign-in
 - **Google Cloud project** for OAuth (Classroom + Gmail scopes), in test mode for now
-- **Anthropic API** for extracting items from emails
+- **Groq, model `openai/gpt-oss-120b`** for extracting items from emails and Classroom
+  announcements (chosen 2026-10-16 by accuracy test; free tier for the pilot). Built
+  as one swappable "AI reader" so another provider (e.g. Anthropic) can replace it.
 - **GitHub** for code storage; commit after every working step
 
 ## Architecture (keep it this way)
@@ -189,6 +191,20 @@ Update at the end of every session: what was finished, what's next.
   **Next:** choose the next stage (see PLAN.md: Stage 4 needs the timetable feed;
   Stage 5 Gmail doesn't). After 2026-10-16, check the 7-day expiry: the Classroom
   card should switch to "Reconnect Classroom".
+- 2026-10-12 to 10-16, session 7: **Stage 5 (Gmail) steps 1–5 done** (see PLAN.md).
+  Measured email volume (~16/day; `feasibility/RESULTS-email-volume.md`); Groq set
+  up (`GROQ_API_KEY` in `.env.local`, zero data retention on); Anthropic account has
+  no credit, nothing bought. Built a 100-item labelled test set (local only, in
+  `feasibility/secrets/testset/`, delete after Stage 5), cross-checked every label.
+  Accuracy test round 1 (`feasibility/RESULTS-accuracy.md`): chose Groq
+  `openai/gpt-oss-120b`. Designed the no-AI noise filter
+  (`feasibility/8-noise-filter-check.mjs`).
+  **Next:** tighten the extraction instructions and re-run gpt-oss-120b (after Groq's
+  daily allowance resets, ~01:30 IST 17 Oct), test the subject filter, then build
+  step 6 (Connect Gmail + sync). Check the 7-day Classroom expiry after ~05:40 IST
+  on 17 Oct. Gmail read-only tokens for the test scripts sit in
+  `feasibility/secrets/` (remove access after Stage 5). At the end of Stage 5,
+  start a new Claude session.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -282,3 +298,20 @@ This becomes interview material, so keep it honest.
   skipping marketing senders without AI.
 - 2026-10-16: Saket's category-filter idea (placements / courses / clubs / other)
   added to Stage 6, with placements pinned and filters that only hide.
+- 2026-10-16: **Chose Groq `openai/gpt-oss-120b`** (Saket's decision). Round-1 test:
+  found 96–98% of real items (one miss: an "applications open" notice with no
+  deadline), every found date right, no broken answers. gpt-oss-20b ruled out: it
+  produced invalid JSON on exactly the multi-deadline emails. Haiku not tested: no
+  free credit, and 120b met the bar. Cost: free for ~9 students on Groq's free tier;
+  paid ≈ $0.15 (≈ ₹13) per student per month (Haiku ≈ ₹9, estimated). Main weakness:
+  over-splitting (false alarms), to fix with instructions. Surprise: Groq's free tier
+  caps tokens per minute, so one very long (marketing) email couldn't be processed
+  at all, another reason to filter noise before the AI.
+- 2026-10-16: Noise filter redesigned to work for any student, without AI: always
+  read the student's own college domain (from their email address) and known
+  placement portals; skip Classroom's notification emails; skip other senders
+  marked as bulk (List-Unsubscribe / Precedence); read other senders writing
+  personally (e.g. recruiters). On Saket's inbox: AI reads ~68%, every skipped
+  outside email was marketing. Bulk headers can't be used on college mail (260 of
+  267 IIM emails carry them via mailing lists). Leak: ~12 Unstop emails a month →
+  small built-in sender list + a one-tap "never read this sender".

@@ -74,7 +74,16 @@ sections/calendar views (Stage 6).
       it skips **zero** real deadlines in the test set (it would save ~30% of cost).
       The test spreads over 2 days to fit Groq's 200K tokens/day. Write the results
       to `feasibility/` (no email content).
-- [ ] **5. Choose the model** (Saket). Record the decision and the numbers in the
+- [x] **5. Choose the model** (Saket). **Chosen 2026-10-16: Groq
+      `openai/gpt-oss-120b`** (results in `feasibility/RESULTS-accuracy.md`).
+      **Still to do before step 6:** tighten the instructions in
+      `feasibility/extract-prompt.mjs` (one item per session's pre-reads, not per
+      document; no separate "Day 2" items or class items beside a pre-read;
+      "applications now open" notices count even without a deadline; enforce the
+      mid-course-feedback rule; no duplicate "check marks" items), re-run
+      `node feasibility/6-run-test.mjs openai/gpt-oss-120b` after deleting/renaming
+      its old results file (needs Groq's daily allowance to reset: run on or after
+      17 Oct ~01:30 IST), compare with round 1, then test Saket's subject filter. Record the decision and the numbers in the
       decision log; update CLAUDE.md's tech stack if Groq wins.
 - [ ] **6. Connect Gmail + sync** (Claude). Separate read-only Gmail permission;
       fetch new emails since the last check; skip obvious noise (job portals,
@@ -103,6 +112,14 @@ sections/calendar views (Stage 6).
 Each step ends with a commit.
 
 ### Reminders
+
+- **When Stage 5 ends: remind Saket to start a new Claude session** (this one's
+  context is nearly full). Make sure CLAUDE.md and PLAN.md are fully up to date
+  first, so the new session can continue from them alone.
+- Noise filter for step 6 (decided 2026-10-16, see CLAUDE.md decision log): always
+  read the college domain + placement portals; skip Classroom notifications; skip
+  other senders marked bulk; read other senders writing personally; plus a small
+  built-in marketing-sender list and a one-tap "never read this sender".
 
 - After ~05:40 IST on 2026-10-17 (7 days after Classroom was connected at 05:37 IST
   on 10 Oct): check the test-mode expiry. Expect `sync_status.state` to become
