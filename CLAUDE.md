@@ -205,6 +205,12 @@ Update at the end of every session: what was finished, what's next.
   on 17 Oct. Gmail read-only tokens for the test scripts sit in
   `feasibility/secrets/` (remove access after Stage 5). At the end of Stage 5,
   start a new Claude session.
+- 2026-10-17, session 8: **Round 2 accuracy test done** (gpt-oss-120b, tightened
+  instructions): every real item found after review (57/57), over-splitting halved;
+  results in `feasibility/RESULTS-accuracy.md`. Classroom still connected at
+  02:35 IST (expiry due after ~05:40 IST).
+  **Next:** check the 7-day Classroom expiry after 05:40 IST; test the subject
+  filter; check the "both Groq models" idea; then step 6 (Connect Gmail + sync).
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -321,3 +327,7 @@ This becomes interview material, so keep it honest.
   test (~$0.03) and prices are re-checked. Made the switch a settings change:
   `lib/ai-reader` holds one copy of the instructions with a Groq and an Anthropic
   connector; `AI_PROVIDER=anthropic` + `ANTHROPIC_API_KEY` switches it.
+- 2026-10-17: Round 2 (tightened instructions) kept: real items 98% → 100% after
+  review, placement items 94% → 100%, over-splitting 27 → 13 extras. Trade-off:
+  marketing emails now produce more false alarms (12 → 39), acceptable because the
+  noise filter skips those senders before the AI; ~12% more tokens per email.

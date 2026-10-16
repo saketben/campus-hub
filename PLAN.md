@@ -77,13 +77,11 @@ sections/calendar views (Stage 6).
 - [x] **5. Choose the model** (Saket). **Chosen 2026-10-16: Groq
       `openai/gpt-oss-120b`** (results in `feasibility/RESULTS-accuracy.md`).
       Instructions tightened (now in `lib/ai-reader/prompt.ts`, the one copy used
-      by the app and the tests). **Round 2 started 2026-10-16** and stops at Groq's
-      daily cap; **to finish it** (on or after 17 Oct ~01:30 IST), run from the
-      project folder:
-      `npx tsx --env-file=.env.local --conditions=react-server feasibility/6-run-test.mts groq openai/gpt-oss-120b --tag round2`
-      then score with `node feasibility/7-score.mjs groq-openai/gpt-oss-120b-round2`
-      and compare with round 1 (`node feasibility/7-score.mjs openai/gpt-oss-120b`).
-      Then test Saket's subject filter.
+      by the app and the tests). **Round 2 done 2026-10-17** (see
+      `feasibility/RESULTS-accuracy.md`): found every real item after review
+      (57/57, Axis Bank miss fixed), over-splitting halved (27 → 13), college
+      "nothing here" false alarms unchanged (14). Keeping these instructions.
+      **Still to do in step 4:** test Saket's subject filter.
       **Switching to Claude Haiku later:** add `ANTHROPIC_API_KEY` (after buying
       credit), run the same test with `... 6-run-test.mts anthropic claude-haiku-5-5
       --tag check`, compare, then set `AI_PROVIDER=anthropic` in `.env.local` and
@@ -136,5 +134,6 @@ Each step ends with a commit.
   on 10 Oct): check the test-mode expiry. Expect `sync_status.state` to become
   `needs_reconnect` and the Classroom card to show "Reconnect Classroom"; then
   reconnect and confirm items come back. Same will apply to Gmail. (Checked
-  2026-10-16 00:49 IST: still connected, last sync 00:44, no errors.)
+  2026-10-16 00:49 IST and 2026-10-17 02:35 IST: still connected, last sync
+  02:30, no errors. Too early; check again after 05:40 IST.)
 - When Term VI's elective list is published, swap it into `lib/term-courses.ts`.

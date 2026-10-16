@@ -39,8 +39,36 @@ Email content and per-item reports stay in `secrets/` (not in Git).
 - **Free-tier capacity:** ~1,500 tokens per read and 200,000 tokens per model per
   day ≈ 130 reads/day ≈ 9 students per model.
 
+## Round 2 (2026-10-16 to 17): tightened instructions, gpt-oss-120b only
+
+Same 100 items, instructions now in `lib/ai-reader/prompt.ts` (one item per
+session's pre-reads, no "Day 2" splits, "applications open" counts, feedback-form
+rule), run through the app's own AI reader (`6-run-test.mts`). Split over two days
+by Groq's daily cap.
+
+| | Round 1 | Round 2 |
+|---|---|---|
+| Real items found (most important) | 98% after review (56/57) | **100% after review (57/57)** |
+| Placement items found | 94% (15/16) | **100% (16/16)** |
+| Right date, when found | 100% | 100% |
+| Right time, when found | 95% (36/38) | 97% (37/38) |
+| Extra items inside emails that had real items (over-splitting) | 27 | **13** |
+| False alarms in non-marketing "nothing here" emails (41 emails) | 14 items, 30 kept empty | 14 items, 28 kept empty |
+| False alarms in marketing emails (filtered before the AI in the app) | 12 | 39 |
+| Answers that failed | 0 (+1 too large) | 0 (+1 too large, same marketing email) |
+| Paid cost per email | ≈ $0.00034 | ≈ $0.00038 |
+
+- **The one real miss is fixed**: the Axis Bank "applications open" notice is now
+  found. The B2B "miss" is the same title mismatch as round 1 (found, named
+  differently).
+- **Over-splitting halved** (27 → 13 extras alongside real items).
+- **"Nothing here" false alarms didn't improve** for college emails (still 14).
+  Marketing false alarms tripled (the "applications open counts" rule makes the AI
+  treat promotions as opportunities), but the noise filter skips those senders
+  before the AI, so they don't reach students.
+- Slightly more tokens per email (+12%): the instructions are longer.
+
 ## Next
 
-Tighten the instructions (one item per session's pre-reads, no "Day 2" splits,
-"applications open" counts, enforce the feedback-form rule), re-run gpt-oss-120b on
-the same 100 items, and test Saket's subject filter.
+Keep the round 2 instructions. Test Saket's subject filter; check the "use both free
+Groq models" idea (score round-1 20b vs 120b on announcements #86–100).
