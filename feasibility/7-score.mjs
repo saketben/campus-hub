@@ -1,6 +1,7 @@
 // Stage 5, step 4: score a model's answers against Saket's labels.
 //   node 7-score.mjs <run>   e.g. openai/gpt-oss-120b (round 1)
 //                                 groq-openai/gpt-oss-120b-round2
+//   add --only email|announcement to score one kind of message only.
 // Prints totals only. A per-item report (with titles) goes to
 // secrets/testset/score-<model>.txt for review; it stays on this laptop.
 import fs from "node:fs";
@@ -10,10 +11,13 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const DIR = path.join(here, "secrets", "testset");
 const model = process.argv[2];
-const safe = model.replace(/[^a-z0-9.-]/gi, "_");
-const items = JSON.parse(fs.readFileSync(path.join(DIR, "items.json"), "utf8"));
+const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1] : null;
+const safe = model.replace(/[^a-z0-9.-]/gi, "_") + (only ? `-${only}` : "");
+const allItems = JSON.parse(fs.readFileSync(path.join(DIR, "items.json"), "utf8"));
+const items = only ? allItems.filter((i) => i.kind === only) : allItems;
 const labels = JSON.parse(fs.readFileSync(path.join(DIR, "labels.json"), "utf8"));
-const results = JSON.parse(fs.readFileSync(path.join(DIR, `results-${safe}.json`), "utf8"));
+const allResults = JSON.parse(fs.readFileSync(path.join(DIR, `results-${model.replace(/[^a-z0-9.-]/gi, "_")}.json`), "utf8"));
+const results = Object.fromEntries(items.filter((i) => allResults[i.id]).map((i) => [i.id, allResults[i.id]]));
 
 // Paid prices per million tokens (in, out), for "what would this cost".
 // Groq docs and Anthropic list prices, 2026-10. Check again before relying on them.
@@ -47,7 +51,8 @@ const timeClose = (a, b) => {
 const t = { extraFromMarketing: 0, labelled: 0, found: 0, dateOk: 0, dated: 0, timeOk: 0, timed: 0, extra: 0, extraInNothing: 0, nothingItems: 0, nothingClean: 0, placementLabelled: 0, placementFound: 0, unanswered: 0 };
 const report = [];
 
-items.forEach((item, idx) => {
+items.forEach((item) => {
+  const idx = allItems.indexOf(item);
   const want = labels[item.id]?.items ?? [];
   const r = results[item.id];
   if (!r) {

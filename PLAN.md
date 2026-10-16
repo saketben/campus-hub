@@ -118,9 +118,11 @@ Each step ends with a commit.
 - **Saket's idea (2026-10-16): use both free Groq models.** Each has its own
   200K-tokens/day allowance. Classroom announcements (short, simple; ~20% of AI
   reads) could go to gpt-oss-20b, and 20b could be a backup when 120b's allowance is
-  used up. Caution: 20b broke (invalid JSON) on multi-deadline emails. Check with
-  existing data: score round-1 20b vs 120b on announcements only (items #86–100),
-  then decide. Expected gain: ~9 → ~11 students free.
+  used up. **Checked 2026-10-17** (`feasibility/RESULTS-accuracy.md`): on the
+  round 2 instructions 20b found all 12 announcement items (as 120b did), but
+  still broke (invalid JSON) on the 3-deadline email. Free capacity ≈ 8 → ≈ 11
+  students. **Saket to decide** whether announcements go to 20b (with 120b as
+  retry if 20b's answer is broken); emails stay on 120b either way.
 
 - **When Stage 5 ends: remind Saket to start a new Claude session** (this one's
   context is nearly full). Make sure CLAUDE.md and PLAN.md are fully up to date

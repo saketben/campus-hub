@@ -68,7 +68,36 @@ by Groq's daily cap.
   before the AI, so they don't reach students.
 - Slightly more tokens per email (+12%): the instructions are longer.
 
+## Both free Groq models? (2026-10-17)
+
+Saket's idea: send Classroom announcements (#86–100) to gpt-oss-20b, which has its
+own 200K-tokens/day allowance, and keep 120b's allowance for emails. Scored with
+`7-score.mjs <run> --only announcement`; 20b also re-run on the round 2 instructions.
+
+| Announcements only (15; 12 real items) | 20b round 1 | 120b round 1 | 20b round 2 | 120b round 2 |
+|---|---|---|---|---|
+| Real items found | 92% (11/12) | 100% | **100%** | **100%** |
+| Right date / time | 100% / 0 of 1 | 100% / 0 of 1 | 100% / 1 of 1 | 100% / 0 of 1 |
+| Extra items | 17 | 19 | 9 | 7 |
+| Broken answers | 0 | 0 | 0 | 0 |
+| Tokens per announcement | ≈ 1,290 | ≈ 1,090 | ≈ 1,520 | ≈ 1,270 |
+
+20b round 2 on all 100 items: 93% (53/57) real items. It still returned invalid
+JSON three times on the one email with three deadlines (#16, CFA Ethics Challenge),
+losing all three, the same weakness as round 1. Its other "miss" is the B2B title
+mismatch.
+
+- **On announcements, 20b round 2 is as good as 120b** (12/12, dates right).
+  Announcements are short and usually hold one item, which is where 20b is safe.
+- **20b is not safe for emails**: multi-deadline emails break it.
+- 20b spends *more* tokens per read (longer reasoning), so the gain comes only from
+  its separate allowance. Estimate (≈ 1,700 tokens per 120b read in round 2,
+  ≈ 10–11 email reads + ~3 announcements per student per day): 120b alone ≈ 8
+  students free; announcements on 20b ≈ 11 students (20b would use ~50K of its
+  200K).
+- Caveat: only 15 announcements, from 5 courses; a small sample.
+
 ## Next
 
-Keep the round 2 instructions. Test Saket's subject filter; check the "use both free
-Groq models" idea (score round-1 20b vs 120b on announcements #86–100).
+Keep the round 2 instructions. Test Saket's subject filter. Saket to decide on the
+two-model split (see PLAN.md reminders).
