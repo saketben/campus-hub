@@ -81,7 +81,11 @@ sections/calendar views (Stage 6).
       `feasibility/RESULTS-accuracy.md`): found every real item after review
       (57/57, Axis Bank miss fixed), over-splitting halved (27 → 13), college
       "nothing here" false alarms unchanged (14). Keeping these instructions.
-      **Still to do in step 4:** test Saket's subject filter.
+      Subject filter tested 2026-10-17 (`feasibility/9-subject-filter.mjs`):
+      neither part skipped a real item; the free rule (portal "Application
+      Submitted" receipts) saves 7% of tokens for nothing; the quick AI look costs
+      more than it saves (≈ 29.9K spent vs ≈ 18.1K saved). **Recommended: free rule
+      only** (awaiting Saket's OK).
       **Switching to Claude Haiku later:** add `ANTHROPIC_API_KEY` (after buying
       credit), run the same test with `... 6-run-test.mts anthropic claude-haiku-5-5
       --tag check`, compare, then set `AI_PROVIDER=anthropic` in `.env.local` and
@@ -137,6 +141,9 @@ Each step ends with a commit.
   on 10 Oct): check the test-mode expiry. Expect `sync_status.state` to become
   `needs_reconnect` and the Classroom card to show "Reconnect Classroom"; then
   reconnect and confirm items come back. Same will apply to Gmail. (Checked
-  2026-10-16 00:49 IST and 2026-10-17 02:35 IST: still connected, last sync
-  02:30, no errors. Too early; check again after 05:40 IST.)
+  2026-10-16 00:49 IST and 2026-10-17 02:35 IST: still connected.)
+  **Confirmed 2026-10-17 21:32 IST:** last good sync 05:30 IST, then Google
+  answered `invalid_grant` and `sync_status.state` became `needs_reconnect`, as
+  expected. **Still to do:** Saket checks the card says "Reconnect Classroom",
+  reconnects, and confirms items come back.
 - When Term VI's elective list is published, swap it into `lib/term-courses.ts`.

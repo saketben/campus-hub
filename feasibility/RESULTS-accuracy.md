@@ -101,3 +101,28 @@ mismatch.
 
 Keep the round 2 instructions. Test Saket's subject filter. Two-model split adopted
 (Saket, 2026-10-17): announcements on 20b with 120b as fallback, emails on 120b.
+
+## Subject filter (2026-10-17)
+
+Saket's idea: skip some full AI reads by looking at sender + subject only
+(`9-subject-filter.mjs`). Tested on the 75 IIM/placement emails (38 with real
+items, 37 without); marketing senders are already skipped by the noise filter.
+
+| | Emails skipped | Real-item emails skipped | Full-read tokens saved | Extra tokens spent |
+|---|---|---|---|---|
+| Free rule: portal "Application Submitted" receipts | 9 | 0 | ≈ 8,200 (7%) | 0 |
+| Quick AI look (sender + subject + attachment names, gpt-oss-120b) | 12 | 0 | ≈ 18,100 | ≈ 29,900 (≈ 450 per email, on all 66 others) |
+
+- **Safe**: neither part skipped an email with a real item. The AI correctly kept
+  tricky ones ("Bring your laptop", "September Feast Feedback Form", "ONE DONATION.
+  MULTIPLE LIVES.") for a full read, and skipped greetings, winner/result
+  announcements, photo albums, press clippings and personal "Seeking Forgiveness"
+  replies.
+- **The quick AI look costs more than it saves**: it has to run on every email, and
+  most college emails still need the full read, so it spends ≈ 29,900 tokens to save
+  ≈ 18,100 (≈ 10% worse overall).
+- **The free rule is pure saving** (7% of full-read tokens, no risk in this set).
+
+Recommendation: use the free rule (portal receipts) in step 6; drop the quick AI
+look. (Sending many subjects in one quick-look call might make it pay off, but
+that would need its own test, and the gain is at most ~15%.)
