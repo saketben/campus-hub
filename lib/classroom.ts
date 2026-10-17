@@ -87,6 +87,7 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
     .from("google_tokens")
     .select("refresh_token_encrypted")
     .eq("user_id", userId)
+    .eq("source", "classroom")
     .maybeSingle();
   const { data: status } = await admin
     .from("sync_status")

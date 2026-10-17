@@ -18,7 +18,7 @@ function authorized(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: students } = await createAdminClient().from("google_tokens").select("user_id");
+  const { data: students } = await createAdminClient().from("google_tokens").select("user_id").eq("source", "classroom");
   const queue = (students ?? []).map((s) => s.user_id as string);
   const counts: Partial<Record<SyncResult, number>> = {};
 

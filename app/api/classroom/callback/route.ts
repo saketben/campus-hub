@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { error: tokenError } = await admin.from("google_tokens").upsert({
     user_id: userId,
+    source: "classroom",
     google_email: emailFromIdToken(tokens.id_token) ?? "unknown",
     refresh_token_encrypted: encrypt(tokens.refresh_token),
     scopes: tokens.scope.split(" "),

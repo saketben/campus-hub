@@ -25,6 +25,7 @@ export async function disconnectClassroom() {
     .from("google_tokens")
     .select("refresh_token_encrypted")
     .eq("user_id", userId)
+    .eq("source", "classroom")
     .maybeSingle();
   if (token) {
     try {
@@ -37,7 +38,8 @@ export async function disconnectClassroom() {
   await admin.from("items").delete().eq("user_id", userId).eq("source", "classroom");
   await admin.from("student_courses").delete().eq("user_id", userId);
   await admin.from("sync_status").delete().eq("user_id", userId).eq("source", "classroom");
-  await admin.from("google_tokens").delete().eq("user_id", userId);
+  await admin.from("message_queue").delete().eq("user_id", userId).eq("source", "classroom");
+  await admin.from("google_tokens").delete().eq("user_id", userId).eq("source", "classroom");
 
   redirect("/?classroom=disconnected");
 }
