@@ -98,7 +98,10 @@ sections/calendar views (Stage 6).
       so students reconnect Classroom once).
       **Draft plan (2026-10-17, awaiting Saket's approval).** Ends with emails
       fetched, filtered and waiting for the AI; step 7 turns them into items.
-      - **6a. Database** (Saket runs one SQL file in Supabase, as before):
+      - [x] **6a. Database** (done 2026-10-17,
+        `supabase/migrations/20261017120000_gmail_queue.sql`; the queue stores
+        no subject either, only ids, sender and time; Classroom sync re-tested
+        live after the change):
         - `google_tokens` holds one key per student **per source** (Classroom,
           Gmail), so connecting or disconnecting one never touches the other.
         - New **reading queue**: one row per email or announcement to read (its
