@@ -40,8 +40,9 @@ WhatsApp is out of scope (no usable API for personal accounts).
 - **Next.js** website, hosted on **Vercel**
 - **Supabase** for the database and Google sign-in
 - **Google Cloud project** for OAuth (Classroom + Gmail scopes), in test mode for now
-- **Groq, model `openai/gpt-oss-120b`** for extracting items from emails and Classroom
-  announcements (chosen 2026-10-16 by accuracy test; free tier for the pilot). Built
+- **Groq, model `openai/gpt-oss-120b`** for extracting items from emails, and
+  `openai/gpt-oss-20b` for Classroom announcements (chosen 2026-10-16/17 by accuracy
+  test; free tier for the pilot). Built
   as one swappable "AI reader" so another provider (e.g. Anthropic) can replace it.
 - **GitHub** for code storage; commit after every working step
 
@@ -209,8 +210,10 @@ Update at the end of every session: what was finished, what's next.
   instructions): every real item found after review (57/57), over-splitting halved;
   results in `feasibility/RESULTS-accuracy.md`. Classroom still connected at
   02:35 IST (expiry due after ~05:40 IST).
+  "Both Groq models" checked and adopted: announcements → gpt-oss-20b, emails →
+  120b (in `lib/ai-reader`).
   **Next:** check the 7-day Classroom expiry after 05:40 IST; test the subject
-  filter; check the "both Groq models" idea; then step 6 (Connect Gmail + sync).
+  filter; then step 6 (Connect Gmail + sync).
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -331,3 +334,10 @@ This becomes interview material, so keep it honest.
   review, placement items 94% → 100%, over-splitting 27 → 13 extras. Trade-off:
   marketing emails now produce more false alarms (12 → 39), acceptable because the
   noise filter skips those senders before the AI; ~12% more tokens per email.
+- 2026-10-17: **Classroom announcements go to Groq `openai/gpt-oss-20b`; emails
+  stay on 120b** (Saket's idea and decision). On the round 2 instructions 20b found
+  all 12 announcement items, as 120b did, but it still broke (invalid JSON) on a
+  3-deadline email, so it never reads emails. If 20b's answer is broken or its
+  allowance is used up, the announcement is re-read by 120b. Each model has its own
+  free allowance, so the free pilot grows from ≈ 8 to ≈ 11 students. Small sample
+  (15 announcements); watch for 20b misses in the pilot.

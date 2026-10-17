@@ -99,5 +99,5 @@ mismatch.
 
 ## Next
 
-Keep the round 2 instructions. Test Saket's subject filter. Saket to decide on the
-two-model split (see PLAN.md reminders).
+Keep the round 2 instructions. Test Saket's subject filter. Two-model split adopted
+(Saket, 2026-10-17): announcements on 20b with 120b as fallback, emails on 120b.

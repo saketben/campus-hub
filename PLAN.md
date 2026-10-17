@@ -121,8 +121,9 @@ Each step ends with a commit.
   used up. **Checked 2026-10-17** (`feasibility/RESULTS-accuracy.md`): on the
   round 2 instructions 20b found all 12 announcement items (as 120b did), but
   still broke (invalid JSON) on the 3-deadline email. Free capacity ≈ 8 → ≈ 11
-  students. **Saket to decide** whether announcements go to 20b (with 120b as
-  retry if 20b's answer is broken); emails stay on 120b either way.
+  students. **Decided (Saket):** announcements go to 20b, re-read by 120b if
+  20b's answer is broken or its allowance is used up; emails stay on 120b. Built
+  into `lib/ai-reader/index.ts` (setting `AI_ANNOUNCEMENT_MODEL`).
 
 - **When Stage 5 ends: remind Saket to start a new Claude session** (this one's
   context is nearly full). Make sure CLAUDE.md and PLAN.md are fully up to date
