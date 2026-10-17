@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 import { ClassroomCard } from "./classroom-card";
+import { GmailCard } from "./gmail-card";
 import { GoogleSignIn } from "./google-sign-in";
 import { ItemsList } from "./items-list";
 import { SyncStatus } from "./sync-status";
@@ -9,7 +10,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
-  const { classroom: message } = await searchParams;
+  const { classroom: message, gmail: gmailMessage } = await searchParams;
   // For "in 3 days" labels. This page renders once per request on the server, so reading the clock is fine.
   // eslint-disable-next-line react-hooks/purity
   const requestTime = Date.now();
@@ -17,6 +18,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   // Row-level security means this only ever returns the signed-in student's own row.
   const { data: classroomStatus } = user
     ? await supabase.from("sync_status").select("state, last_synced_at, courses_confirmed_at").eq("source", "classroom").maybeSingle()
+    : { data: null };
+  const { data: gmailStatus } = user
+    ? await supabase.from("sync_status").select("state").eq("source", "gmail").maybeSingle()
     : { data: null };
 
   // Items from ticked courses; dismissed ones are hidden (dismissing arrives in Stage 5).
@@ -39,6 +43,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const card = (
     <ClassroomCard status={classroomStatus} message={typeof message === "string" ? message : undefined} />
   );
+  // Same for Gmail. A message just shown (e.g. "Gmail connected.") also keeps it on top for that visit.
+  const gmailNeedsAttention = !gmailStatus || gmailStatus.state !== "connected" || typeof gmailMessage === "string";
+  const gmailCard = (
+    <GmailCard status={gmailStatus} message={typeof gmailMessage === "string" ? gmailMessage : undefined} />
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8 sm:py-16">
@@ -60,8 +69,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             {classroomStatus && <SyncStatus lastSyncedAt={classroomStatus.last_synced_at} />}
           </div>
           {needsAttention && card}
+          {gmailNeedsAttention && gmailCard}
           {classroomStatus && <ItemsList items={items ?? []} watching={(watched ?? []).map((c) => c.course_name)} now={requestTime} />}
           {!needsAttention && card}
+          {!gmailNeedsAttention && gmailCard}
         </section>
       ) : (
         <section className="flex flex-col gap-4">

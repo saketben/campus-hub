@@ -23,6 +23,17 @@ export function classroomCallbackUrl(origin: string) {
   return `${origin}/api/classroom/callback`;
 }
 
+// Gmail: one read-only permission, connected separately from Classroom.
+export const GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
+
+export function missingGmailScopes(granted: string[]) {
+  return GMAIL_SCOPES.filter((s) => !granted.includes(s));
+}
+
+export function gmailCallbackUrl(origin: string) {
+  return `${origin}/api/gmail/callback`;
+}
+
 type TokenResponse = {
   access_token: string;
   expires_in: number;

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
-import { revokeToken } from "@/lib/google";
+import { getAccessToken, GoogleTokenError, revokeToken } from "@/lib/google";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -12,20 +12,17 @@ export async function signOut() {
   redirect("/");
 }
 
-// Disconnect Classroom: tell Google to cancel our access, then delete the key,
-// the sync status and every Classroom item we stored for this student.
-export async function disconnectClassroom() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims?.sub;
-  if (!userId) redirect("/");
+type Source = "classroom" | "gmail";
 
+// Tell Google to cancel one source's access, then delete its key, sync status,
+// queue and every item we stored from it for this student.
+async function disconnect(userId: string, source: Source) {
   const admin = createAdminClient();
   const { data: token } = await admin
     .from("google_tokens")
     .select("refresh_token_encrypted")
     .eq("user_id", userId)
-    .eq("source", "classroom")
+    .eq("source", source)
     .maybeSingle();
   if (token) {
     try {
@@ -35,13 +32,53 @@ export async function disconnectClassroom() {
     }
   }
 
-  await admin.from("items").delete().eq("user_id", userId).eq("source", "classroom");
-  await admin.from("student_courses").delete().eq("user_id", userId);
-  await admin.from("sync_status").delete().eq("user_id", userId).eq("source", "classroom");
-  await admin.from("message_queue").delete().eq("user_id", userId).eq("source", "classroom");
-  await admin.from("google_tokens").delete().eq("user_id", userId).eq("source", "classroom");
+  await admin.from("items").delete().eq("user_id", userId).eq("source", source);
+  if (source === "classroom") await admin.from("student_courses").delete().eq("user_id", userId);
+  await admin.from("sync_status").delete().eq("user_id", userId).eq("source", source);
+  await admin.from("message_queue").delete().eq("user_id", userId).eq("source", source);
+  await admin.from("google_tokens").delete().eq("user_id", userId).eq("source", source);
 
+  // Google may treat Classroom and Gmail as one permission for our app, so
+  // cancelling one could cancel both. If the other key stopped working, say so
+  // on its card instead of letting it fail silently.
+  const other: Source = source === "classroom" ? "gmail" : "classroom";
+  const { data: otherToken } = await admin
+    .from("google_tokens")
+    .select("refresh_token_encrypted")
+    .eq("user_id", userId)
+    .eq("source", other)
+    .maybeSingle();
+  if (otherToken) {
+    try {
+      await getAccessToken(decrypt(otherToken.refresh_token_encrypted));
+    } catch (e) {
+      if (e instanceof GoogleTokenError && e.needsReconnect) {
+        await admin
+          .from("sync_status")
+          .update({ state: "needs_reconnect", last_error: `access ended when ${source} was disconnected` })
+          .eq("user_id", userId)
+          .eq("source", other);
+      }
+    }
+  }
+}
+
+async function signedInUserId() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) redirect("/");
+  return userId;
+}
+
+export async function disconnectClassroom() {
+  await disconnect(await signedInUserId(), "classroom");
   redirect("/?classroom=disconnected");
+}
+
+export async function disconnectGmail() {
+  await disconnect(await signedInUserId(), "gmail");
+  redirect("/?gmail=disconnected");
 }
 
 // Save the student's ticked courses. Items from unticked courses go straight away;
