@@ -96,6 +96,46 @@ sections/calendar views (Stage 6).
       newsletters, Classroom's own notification emails); read identical emails once.
       Classroom announcements join the same path (adds the announcements permission,
       so students reconnect Classroom once).
+      **Draft plan (2026-10-17, awaiting Saket's approval).** Ends with emails
+      fetched, filtered and waiting for the AI; step 7 turns them into items.
+      - **6a. Database** (Saket runs one SQL file in Supabase, as before):
+        - `google_tokens` holds one key per student **per source** (Classroom,
+          Gmail), so connecting or disconnecting one never touches the other.
+        - New **reading queue**: one row per email or announcement to read (its
+          Gmail/Classroom id, sender, subject, received time, status: waiting /
+          read / skipped + why). **No email text**: the text is fetched from Gmail
+          only at the moment the AI reads it, then thrown away.
+        - New **shared answers table**: a fingerprint (hash) of each message's
+          text → the items the AI found in it. A batch-wide email arriving in 25
+          inboxes is read once; the other 24 reuse the answer. A hash can't be
+          turned back into the text.
+      - **6b. "Connect Gmail" card** on the home page, next to Classroom: asks
+        for `gmail.readonly` only; says plainly that an AI service reads emails to
+        find deadlines and only the found items are stored; shows "Reconnect" after
+        the 7-day expiry; **Disconnect** deletes the key, the queue rows and all
+        Gmail items. To check while testing: Google may treat Gmail and Classroom
+        as one grant, so removing one could remove both; if so, Disconnect will
+        only delete our stored key instead of revoking it at Google.
+      - **6c. Fetch + filter** (`lib/gmail.ts`), run by the existing 30-minute
+        background job and when the site is opened: list emails since the last
+        check (first connect: the **last 14 days**), read only their headers, then
+        apply the agreed noise filter: always read the student's college domain
+        and placement portals; skip Classroom's notification emails; skip the
+        portal's "Application Submitted" receipts (free rule); skip other senders
+        marked as bulk, plus a small built-in marketing list (e.g. Unstop); read
+        other senders writing personally. Everything kept goes into the queue.
+      - **6d. Classroom announcements** join the queue: add the announcements
+        permission to Connect Classroom (students reconnect once, which the weekly
+        expiry forces anyway), fetch announcements from ticked courses.
+      - **6e. Test**: connect Gmail on the live site, check the queue counts
+        ("checked 140 emails, 95 to read, 45 skipped") against the inbox; card
+        works on phone + laptop; disconnect removes everything.
+      **Why a queue:** Groq's free allowance is 200K tokens per model per day. The
+      first 14 days of one inbox (~150 reads ≈ 250K tokens) don't fit in one day,
+      and several students connecting on the same day would collide. With a queue
+      the newest emails are read first, the rest as allowance returns, and nothing
+      is lost if the allowance runs out mid-sync. Each background run also reads
+      only as many as fit in its time limit.
 - [ ] **7. AI reading → items** (Claude). Each email becomes zero or more items
       (type, title, date/time in IST, **end time when given** (Saket: PPTs and
       lectures often say "1:45 PM – 3:00 PM"; needs a new `ends_at` column),
