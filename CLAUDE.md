@@ -214,9 +214,9 @@ Update at the end of every session: what was finished, what's next.
   120b (in `lib/ai-reader`). Subject filter tested: free portal-receipt rule
   worth keeping (7% saved), quick AI look costs more than it saves. 7-day
   Classroom expiry confirmed (`needs_reconnect` after 05:30 IST on 17 Oct).
-  **Next:** Saket reconnects Classroom on the live site and checks items come
-  back; Saket OKs the subject-filter recommendation; then step 6 (Connect Gmail +
-  sync).
+  Saket reconnected Classroom on the live site; items came back. Saket approved
+  "free rule only" for the subject filter.
+  **Next:** approve the step 6 plan in PLAN.md, then build Connect Gmail + sync.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -346,9 +346,10 @@ This becomes interview material, so keep it honest.
   (15 announcements); watch for 20b misses in the pilot.
 - 2026-10-17: Confirmed the 7-day test-mode expiry: exactly 7 days after connecting,
   Google refused the Classroom token (`invalid_grant`) and the site marked it
-  "needs reconnect". Every pilot student will have to reconnect Classroom (and
+  "needs reconnect"; reconnecting brought the items back. Every pilot student will have to reconnect Classroom (and
   later Gmail) weekly until the app is Internal or verified.
 - 2026-10-17: Subject filter (Saket's idea) tested: skipped no real item, but the
   quick AI look at sender + subject cost more tokens (≈ 29.9K) than the full reads
   it saved (≈ 18.1K), because it runs on every email. Only the free rule (portal
-  "Application Submitted" receipts, 7% saved) is worth keeping.
+  "Application Submitted" receipts, 7% saved) is worth keeping. Saket approved
+  dropping the quick AI look.

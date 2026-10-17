@@ -65,7 +65,7 @@ sections/calendar views (Stage 6).
       Git-ignored file of ~100 recent emails (plus some Classroom announcements),
       chosen to include one-off ones like shortlists. Saket marks, for each, the
       real deadlines/events (or "none"). Stays on his laptop.
-- [ ] **4. Run the accuracy test.** Same instructions to each model (gpt-oss-20b
+- [x] **4. Run the accuracy test.** (Done 2026-10-17; results under step 5.) Same instructions to each model (gpt-oss-20b
       and gpt-oss-120b on Groq first; Haiku 5.5 only if needed). Score: deadlines
       missed (most important), false alarms, wrong dates/times, and cost per email.
       Also test Saket's **subject filter**: free rules for automated mails (e.g. the
@@ -84,8 +84,8 @@ sections/calendar views (Stage 6).
       Subject filter tested 2026-10-17 (`feasibility/9-subject-filter.mjs`):
       neither part skipped a real item; the free rule (portal "Application
       Submitted" receipts) saves 7% of tokens for nothing; the quick AI look costs
-      more than it saves (≈ 29.9K spent vs ≈ 18.1K saved). **Recommended: free rule
-      only** (awaiting Saket's OK).
+      more than it saves (≈ 29.9K spent vs ≈ 18.1K saved). **Decided (Saket):
+      free rule only**, built in step 6.
       **Switching to Claude Haiku later:** add `ANTHROPIC_API_KEY` (after buying
       credit), run the same test with `... 6-run-test.mts anthropic claude-haiku-5-5
       --tag check`, compare, then set `AI_PROVIDER=anthropic` in `.env.local` and
@@ -144,6 +144,5 @@ Each step ends with a commit.
   2026-10-16 00:49 IST and 2026-10-17 02:35 IST: still connected.)
   **Confirmed 2026-10-17 21:32 IST:** last good sync 05:30 IST, then Google
   answered `invalid_grant` and `sync_status.state` became `needs_reconnect`, as
-  expected. **Still to do:** Saket checks the card says "Reconnect Classroom",
-  reconnects, and confirms items come back.
+  expected. Saket reconnected on the live site the same evening; items came back.
 - When Term VI's elective list is published, swap it into `lib/term-courses.ts`.
