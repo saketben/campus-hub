@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
-import { getAccessToken, GoogleTokenError, revokeToken } from "@/lib/google";
+import { revokeToken } from "@/lib/google";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -14,8 +14,12 @@ export async function signOut() {
 
 type Source = "classroom" | "gmail";
 
-// Tell Google to cancel one source's access, then delete its key, sync status,
-// queue and every item we stored from it for this student.
+// Delete one source's key, sync status, queue and every item we stored from it.
+// Google treats our Classroom and Gmail permissions as one grant (tested
+// 2026-10-21): cancelling one at Google cancels both. So we only ask Google to
+// cancel when this is the student's last connection (Saket's decision); until
+// then the deleted key is simply gone, and we can no longer use it.
+// Returns whether Google was asked to cancel.
 async function disconnect(userId: string, source: Source) {
   const admin = createAdminClient();
   const { data: token } = await admin
@@ -24,7 +28,16 @@ async function disconnect(userId: string, source: Source) {
     .eq("user_id", userId)
     .eq("source", source)
     .maybeSingle();
-  if (token) {
+  const other: Source = source === "classroom" ? "gmail" : "classroom";
+  const { data: otherToken } = await admin
+    .from("google_tokens")
+    .select("user_id")
+    .eq("user_id", userId)
+    .eq("source", other)
+    .maybeSingle();
+
+  const cancelAtGoogle = Boolean(token) && !otherToken;
+  if (token && cancelAtGoogle) {
     try {
       await revokeToken(decrypt(token.refresh_token_encrypted));
     } catch {
@@ -37,30 +50,7 @@ async function disconnect(userId: string, source: Source) {
   await admin.from("sync_status").delete().eq("user_id", userId).eq("source", source);
   await admin.from("message_queue").delete().eq("user_id", userId).eq("source", source);
   await admin.from("google_tokens").delete().eq("user_id", userId).eq("source", source);
-
-  // Google may treat Classroom and Gmail as one permission for our app, so
-  // cancelling one could cancel both. If the other key stopped working, say so
-  // on its card instead of letting it fail silently.
-  const other: Source = source === "classroom" ? "gmail" : "classroom";
-  const { data: otherToken } = await admin
-    .from("google_tokens")
-    .select("refresh_token_encrypted")
-    .eq("user_id", userId)
-    .eq("source", other)
-    .maybeSingle();
-  if (otherToken) {
-    try {
-      await getAccessToken(decrypt(otherToken.refresh_token_encrypted));
-    } catch (e) {
-      if (e instanceof GoogleTokenError && e.needsReconnect) {
-        await admin
-          .from("sync_status")
-          .update({ state: "needs_reconnect", last_error: `access ended when ${source} was disconnected` })
-          .eq("user_id", userId)
-          .eq("source", other);
-      }
-    }
-  }
+  return cancelAtGoogle;
 }
 
 async function signedInUserId() {
@@ -72,13 +62,13 @@ async function signedInUserId() {
 }
 
 export async function disconnectClassroom() {
-  await disconnect(await signedInUserId(), "classroom");
-  redirect("/?classroom=disconnected");
+  const cancelled = await disconnect(await signedInUserId(), "classroom");
+  redirect(`/?classroom=${cancelled ? "disconnected" : "disconnected_kept"}`);
 }
 
 export async function disconnectGmail() {
-  await disconnect(await signedInUserId(), "gmail");
-  redirect("/?gmail=disconnected");
+  const cancelled = await disconnect(await signedInUserId(), "gmail");
+  redirect(`/?gmail=${cancelled ? "disconnected" : "disconnected_kept"}`);
 }
 
 // Save the student's ticked courses. Items from unticked courses go straight away;

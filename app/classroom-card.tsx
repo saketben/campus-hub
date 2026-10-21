@@ -11,6 +11,10 @@ const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   connected: { text: "Classroom connected.", tone: "ok" },
   courses: { text: "Courses saved. Your list now shows only the courses you picked.", tone: "ok" },
   disconnected: { text: "Classroom disconnected. We deleted your Classroom items and asked Google to cancel our access.", tone: "ok" },
+  disconnected_kept: {
+    text: "Classroom disconnected. We deleted your Classroom items and our Classroom key, so Campus Hub can no longer read Classroom. Google still lists Campus Hub in your account because Gmail is connected.",
+    tone: "ok",
+  },
   cancelled: { text: "You cancelled on Google's screen. Nothing was connected.", tone: "warn" },
   missing: { text: "Some permissions were unticked on Google's screen. Please connect again and allow all three.", tone: "warn" },
   error: { text: "Connecting didn't work. Please try again.", tone: "warn" },

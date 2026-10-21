@@ -5,6 +5,10 @@ type Status = { state: string } | null;
 const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   connected: { text: "Gmail connected.", tone: "ok" },
   disconnected: { text: "Gmail disconnected. We deleted your Gmail items and asked Google to cancel our access.", tone: "ok" },
+  disconnected_kept: {
+    text: "Gmail disconnected. We deleted your Gmail items and our Gmail key, so Campus Hub can no longer read your email. Google still lists Campus Hub in your account because Classroom is connected.",
+    tone: "ok",
+  },
   cancelled: { text: "You cancelled on Google's screen. Gmail wasn't connected.", tone: "warn" },
   missing: { text: "The Gmail permission was unticked on Google's screen. Please connect again and allow it.", tone: "warn" },
   error: { text: "Connecting Gmail didn't work. Please try again.", tone: "warn" },
