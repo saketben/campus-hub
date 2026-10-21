@@ -119,6 +119,12 @@ sections/calendar views (Stage 6).
         Gmail items. To check while testing: Google may treat Gmail and Classroom
         as one grant, so removing one could remove both; if so, Disconnect will
         only delete our stored key instead of revoking it at Google.
+        **Built and tested 2026-10-21** (Saket, live site): connect, disconnect
+        and reconnect work; Classroom items unaffected. **Confirmed: Google treats
+        both as one grant.** Disconnecting Gmail (revoke at Google) also ended
+        Classroom; the site flagged Classroom "needs reconnecting" as designed.
+        Connecting either one leaves the other's key working (checked both keys
+        after reconnecting). Open: how Disconnect should behave (Saket to decide).
       - **6c. Fetch + filter** (`lib/gmail.ts`), run by the existing 30-minute
         background job and when the site is opened: list emails since the last
         check (first connect: the **last 14 days**), read only their headers, then

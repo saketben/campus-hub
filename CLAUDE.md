@@ -353,3 +353,6 @@ This becomes interview material, so keep it honest.
   it saved (≈ 18.1K), because it runs on every email. Only the free rule (portal
   "Application Submitted" receipts, 7% saved) is worth keeping. Saket approved
   dropping the quick AI look.
+- 2026-10-21: Surprise (expected risk, now confirmed): Google treats our Classroom
+  and Gmail permissions as one grant. Asking Google to cancel one (Disconnect)
+  cancels both; connecting one leaves the other working.
