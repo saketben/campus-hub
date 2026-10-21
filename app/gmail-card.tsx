@@ -1,6 +1,7 @@
 import { disconnectGmail } from "./actions";
 
 type Status = { state: string } | null;
+type Counts = { checked: number; waiting: number; skipped: number } | null;
 
 const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   connected: { text: "Gmail connected.", tone: "ok" },
@@ -18,7 +19,7 @@ const buttonClass =
   "inline-flex h-11 w-full items-center justify-center rounded-lg bg-zinc-900 px-5 font-medium text-white hover:bg-zinc-700 sm:w-auto dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300";
 
 // What the student sees about Gmail: connect, reconnect, or connected (+ disconnect).
-export function GmailCard({ status, message }: { status: Status; message?: string }) {
+export function GmailCard({ status, counts, message }: { status: Status; counts: Counts; message?: string }) {
   const note = message ? MESSAGES[message] : undefined;
 
   return (
@@ -80,8 +81,10 @@ export function GmailCard({ status, message }: { status: Status; message?: strin
       {status?.state === "connected" && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            <span className="font-medium text-zinc-900 dark:text-zinc-100">Gmail connected.</span> Items from
-            your emails will start appearing here soon.
+            <span className="font-medium text-zinc-900 dark:text-zinc-100">Gmail connected.</span>{" "}
+            {counts
+              ? `Checked ${counts.checked} emails: ${counts.waiting} to read for deadlines, ${counts.skipped} skipped (notifications, marketing, newsletters). Items from them will start appearing here soon.`
+              : "Checking your emails…"}
           </p>
           <form action={disconnectGmail}>
             <button className="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">

@@ -124,7 +124,19 @@ sections/calendar views (Stage 6).
         both as one grant.** Disconnecting Gmail (revoke at Google) also ended
         Classroom; the site flagged Classroom "needs reconnecting" as designed.
         Connecting either one leaves the other's key working (checked both keys
-        after reconnecting). Open: how Disconnect should behave (Saket to decide).
+        after reconnecting). **Decided (Saket):** disconnecting one deletes our key
+        and its items without cancelling at Google, so the other keeps working;
+        Google is asked to cancel only when the last connection is disconnected.
+      - **6c built 2026-10-21** (`lib/gmail.ts`, `/api/gmail/sync`, background job
+        now runs Classroom + Gmail). First run on Saket's inbox (7–21 Oct): 295
+        emails checked in 26 s; **185 to read** (132 IIM, 42 edtex.in, 11 outside
+        senders writing personally), skipped 39 Classroom notifications, 34 Unstop,
+        26 other bulk senders, 11 portal receipts. A second run added no
+        duplicates (1.3 s). 185 reads ≈ 315K tokens, so the first read-through
+        will take ~2 days of free allowance (expected; the queue handles it).
+        **For Saket to check:** a few bulk-skipped senders look recruitment-
+        related (jobs2web.com ×2, mercer.com, sc.com, hiring.talentsjobs.in);
+        confirm none held a real deadline.
       - **6c. Fetch + filter** (`lib/gmail.ts`), run by the existing 30-minute
         background job and when the site is opened: list emails since the last
         check (first connect: the **last 14 days**), read only their headers, then

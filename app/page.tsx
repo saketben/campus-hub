@@ -20,8 +20,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     ? await supabase.from("sync_status").select("state, last_synced_at, courses_confirmed_at").eq("source", "classroom").maybeSingle()
     : { data: null };
   const { data: gmailStatus } = user
-    ? await supabase.from("sync_status").select("state").eq("source", "gmail").maybeSingle()
+    ? await supabase.from("sync_status").select("state, last_synced_at").eq("source", "gmail").maybeSingle()
     : { data: null };
+
+  // How many emails the Gmail check has looked at, and what it decided.
+  const countQueue = async (status?: string) => {
+    let query = supabase.from("message_queue").select("message_id", { count: "exact", head: true }).eq("source", "gmail");
+    if (status) query = query.eq("status", status);
+    return (await query).count ?? 0;
+  };
+  const gmailCounts = gmailStatus?.last_synced_at
+    ? { checked: await countQueue(), waiting: await countQueue("waiting"), skipped: await countQueue("skipped") }
+    : null;
 
   // Items from ticked courses; dismissed ones are hidden (dismissing arrives in Stage 5).
   const { data: items } = classroomStatus
@@ -46,7 +56,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   // Same for Gmail. A message just shown (e.g. "Gmail connected.") also keeps it on top for that visit.
   const gmailNeedsAttention = !gmailStatus || gmailStatus.state !== "connected" || typeof gmailMessage === "string";
   const gmailCard = (
-    <GmailCard status={gmailStatus} message={typeof gmailMessage === "string" ? gmailMessage : undefined} />
+    <GmailCard status={gmailStatus} counts={gmailCounts} message={typeof gmailMessage === "string" ? gmailMessage : undefined} />
   );
 
   return (
@@ -66,7 +76,12 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <p className="text-lg">Hi, {user.user_metadata?.full_name ?? user.email}</p>
-            {classroomStatus && <SyncStatus lastSyncedAt={classroomStatus.last_synced_at} />}
+            {(classroomStatus || gmailStatus) && (
+              <SyncStatus
+                lastSyncedAt={classroomStatus?.last_synced_at ?? gmailStatus?.last_synced_at ?? null}
+                sources={[...(classroomStatus ? ["classroom" as const] : []), ...(gmailStatus ? ["gmail" as const] : [])]}
+              />
+            )}
           </div>
           {needsAttention && card}
           {gmailNeedsAttention && gmailCard}

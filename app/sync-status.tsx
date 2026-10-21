@@ -12,27 +12,37 @@ function ago(iso: string) {
   return new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
 
+type Source = "classroom" | "gmail";
+const NAMES: Record<Source, string> = { classroom: "Classroom", gmail: "Gmail" };
+
 // "Last updated …" line. When the page opens, and whenever the student comes back to
-// the tab or app, it asks the server to check Classroom (D1); if anything was
-// fetched, it reloads the list. The server limits this to once a minute per student.
-export function SyncStatus({ lastSyncedAt }: { lastSyncedAt: string | null }) {
+// the tab or app, it asks the server to check each connected source (D1); if
+// anything was fetched, it reloads the page. The server limits this to once a
+// minute per student per source.
+export function SyncStatus({ lastSyncedAt, sources }: { lastSyncedAt: string | null; sources: Source[] }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(true);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<Source[]>([]);
+  const key = sources.join(",");
 
   useEffect(() => {
     let cancelled = false;
+    const list = key.split(",").filter(Boolean) as Source[];
     const check = () => {
       setUpdating(true);
-      fetch("/api/classroom/sync", { method: "POST" })
-        .then((res) => res.json())
-        .then(({ result }) => {
-          if (cancelled) return;
-          if (result === "synced" || result === "needs_reconnect") router.refresh();
-          setFailed(result === "failed");
-        })
-        .catch(() => !cancelled && setFailed(true))
-        .finally(() => !cancelled && setUpdating(false));
+      Promise.all(
+        list.map((source) =>
+          fetch(`/api/${source}/sync`, { method: "POST" })
+            .then((res) => res.json())
+            .then(({ result }) => result as string)
+            .catch(() => "failed"),
+        ),
+      ).then((results) => {
+        if (cancelled) return;
+        if (results.some((r) => r === "synced" || r === "needs_reconnect")) router.refresh();
+        setFailed(list.filter((_, i) => results[i] === "failed"));
+        setUpdating(false);
+      });
     };
     const onReturn = () => document.visibilityState === "visible" && check();
 
@@ -42,14 +52,14 @@ export function SyncStatus({ lastSyncedAt }: { lastSyncedAt: string | null }) {
       cancelled = true;
       document.removeEventListener("visibilitychange", onReturn);
     };
-  }, [router]);
+  }, [router, key]);
 
   return (
     <p className="text-xs text-zinc-500" aria-live="polite">
       {updating
-        ? "Updating from Classroom…"
-        : failed
-          ? `Couldn't reach Classroom just now. ${lastSyncedAt ? `Showing what we had ${ago(lastSyncedAt)}.` : ""}`
+        ? `Updating from ${sources.map((s) => NAMES[s]).join(" and ")}…`
+        : failed.length
+          ? `Couldn't reach ${failed.map((s) => NAMES[s]).join(" or ")} just now. ${lastSyncedAt ? `Showing what we had ${ago(lastSyncedAt)}.` : ""}`
           : lastSyncedAt
             ? `Last updated ${ago(lastSyncedAt)}`
             : ""}
