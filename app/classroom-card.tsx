@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { NEEDS_ANNOUNCEMENTS } from "@/lib/classroom";
 import { disconnectClassroom } from "./actions";
 
 type Status = {
   state: string;
   last_synced_at: string | null;
+  last_error: string | null;
   courses_confirmed_at: string | null;
 } | null;
 
@@ -16,7 +18,7 @@ const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
     tone: "ok",
   },
   cancelled: { text: "You cancelled on Google's screen. Nothing was connected.", tone: "warn" },
-  missing: { text: "Some permissions were unticked on Google's screen. Please connect again and allow all three.", tone: "warn" },
+  missing: { text: "Some permissions were unticked on Google's screen. Please connect again and allow all of them.", tone: "warn" },
   error: { text: "Connecting didn't work. Please try again.", tone: "warn" },
 };
 
@@ -46,11 +48,16 @@ export function ClassroomCard({ status, message }: { status: Status; message?: s
           <div>
             <p className="font-medium text-zinc-900 dark:text-zinc-100">Connect Google Classroom</p>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Your assignments and pre-reads will then appear here on their own.
+              Your assignments, pre-reads and deadlines from course announcements will then appear here on
+              their own.
             </p>
           </div>
           <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
             <li>Read-only: Campus Hub can never post, submit or change anything.</li>
+            <li>
+              Course announcements are read by an AI service (Groq) to find deadlines. It doesn&apos;t keep
+              them; Campus Hub stores only what it finds, with a link back.
+            </li>
             <li>
               Google&apos;s screen says &ldquo;course work <strong>and grades</strong>&rdquo;. That&apos;s
               Google&apos;s wording for assignments. Campus Hub never reads or stores your grades.
@@ -73,6 +80,22 @@ export function ClassroomCard({ status, message }: { status: Status; message?: s
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               Google ended our access (during the pilot this happens every 7 days). Until you reconnect,
               new assignments won&apos;t appear here.
+            </p>
+          </div>
+          <a href="/api/classroom/connect" className={buttonClass}>
+            Reconnect Classroom
+          </a>
+        </>
+      )}
+
+      {status?.state === "connected" && status.last_error === NEEDS_ANNOUNCEMENTS && (
+        <>
+          <div>
+            <p className="font-medium text-zinc-900 dark:text-zinc-100">Reconnect once for course announcements</p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Campus Hub can now also find deadlines in your courses&apos; announcements (pre-reads by session,
+              guest lectures). Google needs your OK for that one extra read-only permission. Your assignments
+              keep updating meanwhile.
             </p>
           </div>
           <a href="/api/classroom/connect" className={buttonClass}>

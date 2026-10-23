@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { NEEDS_ANNOUNCEMENTS } from "@/lib/classroom";
 import { signOut } from "./actions";
 import { ClassroomCard } from "./classroom-card";
 import { GmailCard } from "./gmail-card";
@@ -17,7 +18,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   // Row-level security means this only ever returns the signed-in student's own row.
   const { data: classroomStatus } = user
-    ? await supabase.from("sync_status").select("state, last_synced_at, courses_confirmed_at").eq("source", "classroom").maybeSingle()
+    ? await supabase.from("sync_status").select("state, last_synced_at, last_error, courses_confirmed_at").eq("source", "classroom").maybeSingle()
     : { data: null };
   const { data: gmailStatus } = user
     ? await supabase.from("sync_status").select("state, last_synced_at").eq("source", "gmail").maybeSingle()
@@ -49,7 +50,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   // The Classroom card goes first when it needs the student's attention, last otherwise.
   const needsAttention =
-    !classroomStatus || classroomStatus.state !== "connected" || !classroomStatus.courses_confirmed_at;
+    !classroomStatus ||
+    classroomStatus.state !== "connected" ||
+    !classroomStatus.courses_confirmed_at ||
+    classroomStatus.last_error === NEEDS_ANNOUNCEMENTS;
   const card = (
     <ClassroomCard status={classroomStatus} message={typeof message === "string" ? message : undefined} />
   );

@@ -160,7 +160,10 @@ sections/calendar views (Stage 6).
       the newest emails are read first, the rest as allowance returns, and nothing
       is lost if the allowance runs out mid-sync. Each background run also reads
       only as many as fit in its time limit.
-- [ ] **7. AI reading → items** (Claude). Each email becomes zero or more items
+- [ ] **7. AI reading → items** (Claude). **Reading order (Saket, 2026-10-24,
+      campus first):** campus + placement-portal emails first (newest first), then
+      Classroom announcements, then outside senders only with leftover allowance;
+      outside items are still shown. Each email becomes zero or more items
       (type, title, date/time in IST, **end time when given** (Saket: PPTs and
       lectures often say "1:45 PM – 3:00 PM"; needs a new `ends_at` column),
       confidence, link back to the email). Review the "other" items from labelling

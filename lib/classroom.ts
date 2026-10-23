@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
-import { GoogleTokenError, getAccessToken } from "@/lib/google";
+import { ANNOUNCEMENTS_SCOPE, GoogleTokenError, getAccessToken } from "@/lib/google";
 import { isCurrentTermCourse } from "@/lib/term-courses";
 
 // Fetches a student's Classroom assignments and pre-reads and saves them as items.
@@ -14,6 +14,10 @@ const RECENT_MATERIAL_DAYS = 14; // pre-reads posted in the last two weeks
 const MIN_SECONDS_BETWEEN_SYNCS = 60; // at most once a minute per student (D1)
 const PREVIEW_CHARS = 200;
 const COURSES_AT_A_TIME = 6;
+const ANNOUNCEMENT_DAYS = 14; // same look-back as Gmail; older ones are already in the queue
+// Saved in sync_status.last_error when the student connected before announcements
+// were added (6d): the Classroom card then asks them to reconnect once.
+export const NEEDS_ANNOUNCEMENTS = "needs announcements permission";
 
 // Runs `task` on every entry, at most `limit` at a time, keeping the original order.
 async function inBatches<T, R>(list: T[], limit: number, task: (entry: T) => Promise<R>): Promise<R[]> {
@@ -42,6 +46,17 @@ type Post = {
   updateTime: string;
 };
 type CourseWork = Post & { dueDate?: DueDate; dueTime?: { hours?: number; minutes?: number } };
+type Announcement = { id: string; alternateLink: string; creationTime: string; updateTime: string };
+
+// The newest announcements of a course (one page is plenty for 14 days). Only ids,
+// times and links are used here; the AI fetches the text when it reads them (step 7).
+async function recentAnnouncements(token: string, courseId: string): Promise<Announcement[]> {
+  const res = await fetch(`${API}/courses/${courseId}/announcements?orderBy=updateTime%20desc&pageSize=50`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Classroom announcements -> HTTP ${res.status}`);
+  return ((await res.json()).announcements ?? []) as Announcement[];
+}
 
 // Short preview: the first lines of the post plus the names of attached files.
 function preview(post: Post): string | null {
@@ -85,7 +100,7 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
 
   const { data: tokenRow } = await admin
     .from("google_tokens")
-    .select("refresh_token_encrypted")
+    .select("refresh_token_encrypted, scopes")
     .eq("user_id", userId)
     .eq("source", "classroom")
     .maybeSingle();
@@ -132,18 +147,24 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
 
     // Only ticked courses are fetched, several at a time; unticked ones keep the
     // "last post" date we already had. This is what keeps Save and Connect quick.
+    // Students who connected before 6d haven't allowed announcements yet.
+    const canReadAnnouncements = ((tokenRow.scopes as string[] | null) ?? []).includes(ANNOUNCEMENTS_SCOPE);
     const fetched = await inBatches(courses.filter(ticked), COURSES_AT_A_TIME, async (course) => {
-      const [work, materials] = await Promise.all([
+      const [work, materials, announcements] = await Promise.all([
         getAll<CourseWork>(token, `/courses/${course.id}/courseWork`, "courseWork"),
         getAll<Post>(token, `/courses/${course.id}/courseWorkMaterials`, "courseWorkMaterial"),
+        canReadAnnouncements ? recentAnnouncements(token, course.id) : Promise.resolve([]),
       ]);
-      return { course, work, materials };
+      return { course, work, materials, announcements };
     });
     const fetchedById = new Map(fetched.map((f) => [f.course.id, f]));
 
     const courseRows = courses.map((course) => {
       const f = fetchedById.get(course.id);
-      const lastActivity = f ? Math.max(0, ...[...f.work, ...f.materials].map((x) => Date.parse(x.updateTime))) : 0;
+      // Announcements count as activity too (ADPM posts nothing else).
+      const lastActivity = f
+        ? Math.max(0, ...[...f.work, ...f.materials, ...f.announcements].map((x) => Date.parse(x.updateTime)))
+        : 0;
       return {
         user_id: userId,
         course_id: course.id,
@@ -220,7 +241,33 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
     const { error: deleteError } = await stale;
     if (deleteError) throw new Error(`Removing old items: ${deleteError.message}`);
 
-    await setStatus({ state: "connected", last_synced_at: now.toISOString(), last_error: null });
+    // Recent announcements join the reading queue (step 7 turns them into items).
+    // Ones already queued are left as they are.
+    const queueRows = fetched.flatMap(({ course, announcements }) =>
+      announcements
+        .filter((a) => now.getTime() - Date.parse(a.creationTime) <= ANNOUNCEMENT_DAYS * DAY)
+        .map((a) => ({
+          user_id: userId,
+          source: "classroom",
+          message_id: a.id,
+          course_id: course.id,
+          received_at: a.creationTime,
+          link: a.alternateLink,
+          status: "waiting",
+        })),
+    );
+    if (queueRows.length > 0) {
+      const { error } = await admin
+        .from("message_queue")
+        .upsert(queueRows, { onConflict: "user_id,source,message_id", ignoreDuplicates: true });
+      if (error) throw new Error(`Queueing announcements: ${error.message}`);
+    }
+
+    await setStatus({
+      state: "connected",
+      last_synced_at: now.toISOString(),
+      last_error: canReadAnnouncements ? null : NEEDS_ANNOUNCEMENTS,
+    });
     return "synced";
   } catch (e) {
     await setStatus({ last_error: String(e) });

@@ -1,10 +1,12 @@
 import "server-only";
 
-// The 3 read-only Classroom permissions (decision D5).
+// Read-only Classroom permissions (decision D5), plus announcements (Stage 5, 6d).
+export const ANNOUNCEMENTS_SCOPE = "https://www.googleapis.com/auth/classroom.announcements.readonly";
 export const CLASSROOM_SCOPES = [
   "https://www.googleapis.com/auth/classroom.courses.readonly",
   "https://www.googleapis.com/auth/classroom.coursework.me.readonly",
   "https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly",
+  ANNOUNCEMENTS_SCOPE,
 ];
 
 // Google sometimes reports coursework.me.readonly under its older name

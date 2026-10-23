@@ -378,3 +378,7 @@ This becomes interview material, so keep it honest.
   2", "your application", "results", …). Generic hype words ("deadline", "last
   chance", "invitation") left out: on Saket's 30 days, the chosen words rescued 3
   of 126 marketing emails (≈ 3 extra reads a month).
+- 2026-10-24: **Campus first** (Saket): the product is mainly for campus deadlines.
+  The AI reads campus and placement-portal emails first, then Classroom
+  announcements, and outside emails only with leftover allowance. Outside items
+  are still shown (never ignored), just never at campus mail's expense.
