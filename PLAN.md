@@ -182,6 +182,123 @@ sections/calendar views (Stage 6).
         guest_lecture, not also a class). Low
       confidence shows as "Possible deadline: confirm?". A daily per-student cap
       stops runaway cost.
+
+      **Draft plan (2026-10-24, awaiting Saket's approval).** Ends with items
+      from Saket's real emails and announcements on the live home page.
+
+      **How it works, in plain words.** A new "reader" (`lib/read-queue.ts`) picks
+      waiting messages from the queue, fetches each one's text from Gmail or
+      Classroom, makes a fingerprint, and either reuses a saved answer (same email
+      already read for someone) or asks the AI. The items it finds are saved with a
+      link back; the text is dropped from memory straight away. The queue row is
+      marked "read". It runs in the 30-minute background job and, briefly, when a
+      student opens the site.
+
+      **Facts that shape it** (Groq free tier, from steps 2 and 5): one read takes
+      1–4 s, but Groq allows only **8,000 tokens per minute** per model (≈ 4–5
+      reads a minute) and **200,000 a day** (≈ 117 email reads). So each 30-minute
+      run reads ~20 emails + ~20 announcements in ~4½ minutes, and the daily
+      allowance, not time, is the real limit. Saket's backlog (≈ 201 emails + 21
+      announcements) takes ~2 days, newest campus mail first.
+
+      - [ ] **7a. Database** (Saket runs one SQL file in Supabase):
+        - `items` gets `ends_at` (end time, e.g. "1:45–3:00 PM") and `sender`
+          (who the email is from; Stage 6 category filters need it too).
+        - `message_queue` gets `reading_since` (so the background job and a page
+          open never read the same message twice at once) and `tokens` + `model`
+          (what each read cost: real cost numbers for the pilot, and the
+          per-student daily cap).
+      - [ ] **7b. The reader** (`lib/read-queue.ts`, tested locally on a handful
+        of Saket's messages before it's switched on):
+        - **Order (campus first):** across all students, first everyone's campus
+          + placement-portal emails, then Classroom announcements, then outside
+          senders; newest first within each; students take turns, so one big
+          inbox can't starve the others. (Announcements use 20b's separate
+          allowance, so in practice they run alongside campus emails.)
+        - **Fetch, read, forget:** Gmail email text (plain-text part, else the
+          HTML turned into text) + subject + sender + attachment names; or the
+          announcement text + course name. Cut at ~12,000 characters (≈ 3,000
+          tokens, under the per-minute cap). Nothing of it is stored.
+        - **Shared answers:** fingerprint = hash of sender + subject + text +
+          received date (the date matters: "tomorrow" means a different day in a
+          re-sent email). Found → reuse, no AI cost.
+        - **Saving items:** date + time are Indian time → stored as UTC; a date
+          without a time = "all day"; no date = "no date given" (still shown).
+          Each item keeps the link back to the student's own email/post, the
+          sender or course name, and its confidence.
+        - **Stops cleanly:** Groq's daily cap reached → that model stops for this
+          run (rows stay "waiting" for the next run); per-minute cap → wait and
+          retry if the run has time left, else stop; ~4½ minutes used → stop
+          starting new reads. A Google key that expired → that student's rows wait
+          until they reconnect.
+        - **Per-student daily cap: 100 AI reads a day** (≈ 170K tokens; reused
+          answers don't count). A normal day is ~10–15; only a first connect or a
+          flood comes near it.
+        - **Problems:** a broken answer is retried on the next run; after 3
+          tries, or if the email is too long even after cutting, the row becomes
+          "failed".
+      - [ ] **7c. The "Found while labelling" rules:**
+        - **Replies:** when a message is a real reply (Gmail's In-Reply-To
+          marker) in a thread we've already read, its items **replace** the
+          thread's earlier items (the newest message wins; the AI also sees the
+          quoted text). If the reply finds nothing (e.g. "Noted, thanks"), the
+          earlier items stay. Emails that only share a subject line (Gmail groups
+          those into one thread too) are **not** treated as replies, so neither
+          one's deadline is lost.
+        - **Duplicate reminders** ("Reminder: PPT tomorrow 5 pm", or the same
+          guest lecture by email and by Classroom announcement): merged into one
+          item only if type, date and time match **and** the titles share most
+          words; when unsure, both are shown (trust rule: better one extra than
+          one missing). This also covers "one event = one item" across sources.
+        - **Group slots:** the AI already lists one item per group with the
+          group in the title ("… (Gr.1)"). All are shown until the Stage 4 group
+          picker exists; then only the student's group.
+        - **Edited announcements:** if a professor edits an announcement after
+          we read it, it's read again and its items replaced ("updated by
+          professor").
+        - **Classroom fix:** today the Classroom sync deletes every Classroom
+          item it didn't just fetch, which would wipe announcement items; it will
+          only touch assignments and pre-reads. Unticking a course removes its
+          announcement items too.
+      - [ ] **7d. Home page:**
+        - One **"Coming up"** list by date with everything (Classroom
+          assignments + email + announcement items): title, date + time (and end
+          time), where it's from (course or sender), "Open in Gmail ↗" / "Open in
+          Classroom ↗".
+        - Items below confidence 0.8 show a **"Possible deadline: confirm?"** tag
+          (in the round 2 test 4 of 122 items were below 0.8; the AI is mostly
+          sure). Confirm/dismiss buttons come in step 8.
+        - **"No date given"** group (recent ones), then "Recent pre-reads" as now.
+          Past items are kept but not shown.
+        - A **reading-progress line**, so the list never looks complete when it
+          isn't: "Read 120 of 201 emails so far; the rest over the next day or
+          two." (trust rule).
+        - **Emails the AI couldn't read** (failed, campus/portal only) show as
+          "Couldn't read this email automatically: please check it" with the link
+          (the subject is not stored, so it shows the sender and date).
+        - Opening the site reads up to ~3 of the student's newest waiting
+          messages right away (after the Gmail/Classroom check), so a new email
+          shows within seconds; the rest is left to the background job.
+        - Footer text updated: emails and announcements are now included; the
+          timetable isn't yet.
+      - [ ] **7e. Test** on the live site, phone + laptop: items from Saket's real
+        emails and announcements appear with correct IST dates and working links;
+        spot-check ~10 against the inbox; check tokens used per day; update
+        CLAUDE.md + PLAN.md.
+
+      **Decisions for Saket** (Claude's suggestion in bold):
+      1. Per-student daily cap: **100 AI reads/day**.
+      2. "Possible deadline" threshold: **below 0.8 confidence**.
+      3. New item types from the labelling tags (`[club]` 15, `[competition]` 3,
+         `[admin]` 3; no `[exam]` or `[form]` came up): **no new types now.** These
+         describe *who it's from*, which is what the Stage 6 category filters need,
+         not *what it is*; changing the AI's types would also mean re-running the
+         accuracy test.
+      4. Replies replace earlier items **only for real replies, and only when the
+         reply found something** (7c).
+      5. Duplicate reminders merged **only when clearly the same** (7c).
+      6. Show "Couldn't read this email" items **for campus/portal mail only**
+         (outside mail that fails is just counted).
 - [ ] **8. Confirm / dismiss** (Claude). One or two taps on the home list.
 - [ ] **9. Test end to end** on phone and laptop; wrap up (logs, tick Stage 5).
 
