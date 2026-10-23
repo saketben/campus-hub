@@ -225,10 +225,15 @@ Update at the end of every session: what was finished, what's next.
   page open. Saket's inbox: 295 emails in 14 days, 185 to read. Added a subject
   safety net for outside senders (Saket's point) and retry on Gmail's 403
   slow-down signal.
-  **Next:** 6d (Classroom announcements into the queue; one Classroom reconnect),
-  6e (test step 6 on phone + laptop), then step 7 (AI reading → items). Classroom
-  and Gmail access both expire ~28 Oct (connected 21 Oct). After 6e, start a new
-  Claude session.
+  6d: announcements permission + recent announcements queued (21 from 5 courses,
+  ADPM included) after a one-time reconnect prompt. 6e: Saket tested live on
+  phone + laptop; Disconnect Gmail now leaves Classroom working. **Step 6 done.**
+  Saket's rule: **campus first** (AI reads campus/portal mail first, outside mail
+  with leftover allowance, still shown).
+  **Next (new session):** step 7, AI reading → items (see PLAN.md step 7 notes:
+  reading order, shared answers, replies update items, group slots, `ends_at`
+  column, Groq daily cap). Queue now: ~201 emails + 21 announcements waiting.
+  Gmail access expires ~31 Oct (reconnected 24 Oct), Classroom ~31 Oct.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.

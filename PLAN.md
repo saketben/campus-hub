@@ -91,7 +91,7 @@ sections/calendar views (Stage 6).
       --tag check`, compare, then set `AI_PROVIDER=anthropic` in `.env.local` and
       Vercel. Record the decision and the numbers in the
       decision log; update CLAUDE.md's tech stack if Groq wins.
-- [ ] **6. Connect Gmail + sync** (Claude). Separate read-only Gmail permission;
+- [x] **6. Connect Gmail + sync** (Claude; done 2026-10-24). Separate read-only Gmail permission;
       fetch new emails since the last check; skip obvious noise (job portals,
       newsletters, Classroom's own notification emails); read identical emails once.
       Classroom announcements join the same path (adds the announcements permission,
@@ -154,7 +154,7 @@ sections/calendar views (Stage 6).
         Original plan: **Classroom announcements** join the queue: add the announcements
         permission to Connect Classroom (students reconnect once, which the weekly
         expiry forces anyway), fetch announcements from ticked courses.
-      - **6e. Test**: connect Gmail on the live site, check the queue counts
+      - [x] **6e done 2026-10-24** (Saket, live, phone + laptop): Disconnect Gmail kept Classroom connected (both keys verified after), reconnecting Gmail rebuilt the queue (309 emails, 201 to read, no duplicates). Original plan: **Test**: connect Gmail on the live site, check the queue counts
         ("checked 140 emails, 95 to read, 45 skipped") against the inbox; card
         works on phone + laptop; disconnect removes everything.
       **Why a queue:** Groq's free allowance is 200K tokens per model per day. The
