@@ -148,7 +148,10 @@ sections/calendar views (Stage 6).
         portal's "Application Submitted" receipts (free rule); skip other senders
         marked as bulk, plus a small built-in marketing list (e.g. Unstop); read
         other senders writing personally. Everything kept goes into the queue.
-      - **6d. Classroom announcements** join the queue: add the announcements
+      - [x] **6d done 2026-10-24.** Saket reconnected via the one-time prompt;
+        21 announcements (last 14 days) queued from all 5 ticked courses, incl.
+        ADPM (4). Announcements now also count as course activity for pre-ticking.
+        Original plan: **Classroom announcements** join the queue: add the announcements
         permission to Connect Classroom (students reconnect once, which the weekly
         expiry forces anyway), fetch announcements from ticked courses.
       - **6e. Test**: connect Gmail on the live site, check the queue counts
