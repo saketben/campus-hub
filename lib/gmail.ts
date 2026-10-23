@@ -20,6 +20,14 @@ const MAX_EMAILS_PER_SYNC = 1000; // newest first; a 14-day look-back is ~250 fo
 const PLACEMENT_PORTALS = ["edtex.in"];
 // Marketing senders that slip past the bulk-mail check: never read.
 const MARKETING_SENDERS = ["unstop.news", "unstop.com"];
+// Safety net (Saket, 2026-10-24): outside senders' bulk or marketing mail is still
+// read when its subject sounds like news about the student personally, e.g. an
+// external interview call or a case-comp round result. Generic hype words
+// ("deadline", "last chance", "invitation") are left out on purpose: on Saket's
+// inbox they matched most of the 126 marketing emails in 30 days; these words
+// matched 3.
+const PERSONAL_OUTCOME =
+  /\b(shortlist(ed)?|interviews?|assessment|test link|next round|round \d|your application|application status|selected|qualified|congratulations|offer letter|results?)\b/i;
 // Public webmail: if a student connects one of these, there's no "college domain".
 const PUBLIC_WEBMAIL = ["gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com"];
 
@@ -50,6 +58,7 @@ export function skipReason(m: Envelope, collegeDomain: string | null): string | 
   if (domain === "classroom.google.com") return "classroom notification"; // already synced from Classroom
   if (portal && /^application submitted\b/i.test(header(m, "Subject"))) return "portal receipt"; // free rule
   if (portal || (collegeDomain && isOrUnder(domain, collegeDomain))) return null;
+  if (PERSONAL_OUTCOME.test(header(m, "Subject"))) return null; // safety net, see above
   if (MARKETING_SENDERS.some((s) => isOrUnder(domain, s))) return "marketing sender";
   if (header(m, "List-Unsubscribe") || /bulk|list/i.test(header(m, "Precedence"))) return "bulk sender";
   return null; // someone outside writing personally, e.g. a recruiter
@@ -59,8 +68,10 @@ async function gmailGet<T>(token: string, path: string): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) return (await res.json()) as T;
-    // Gmail asks us to slow down now and then: wait and try again.
-    if ((res.status === 429 || res.status >= 500) && attempt < 4) {
+    // Gmail asks us to slow down now and then (as 429, or as 403 with a
+    // "rateLimitExceeded" reason): wait and try again.
+    const slowDown = res.status === 429 || res.status >= 500 || (res.status === 403 && /rate ?limit/i.test(await res.text()));
+    if (slowDown && attempt < 5) {
       await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
       continue;
     }

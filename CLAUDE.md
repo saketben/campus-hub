@@ -217,6 +217,18 @@ Update at the end of every session: what was finished, what's next.
   Saket reconnected Classroom on the live site; items came back. Saket approved
   "free rule only" for the subject filter.
   **Next:** approve the step 6 plan in PLAN.md, then build Connect Gmail + sync.
+- 2026-10-17 to 10-24, session 8 (cont.): **Stage 5 step 6a–6c done** (see PLAN.md).
+  6a: database (per-source Google keys, `message_queue`, `message_answers`).
+  6b: Connect Gmail card + Disconnect (cancels at Google only for the last
+  connection). 6c: `lib/gmail.ts` checks new emails (envelopes only, 14-day first
+  look-back), applies the noise filter into the queue; runs every 30 min and on
+  page open. Saket's inbox: 295 emails in 14 days, 185 to read. Added a subject
+  safety net for outside senders (Saket's point) and retry on Gmail's 403
+  slow-down signal.
+  **Next:** 6d (Classroom announcements into the queue; one Classroom reconnect),
+  6e (test step 6 on phone + laptop), then step 7 (AI reading → items). Classroom
+  and Gmail access both expire ~28 Oct (connected 21 Oct). After 6e, start a new
+  Claude session.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -355,4 +367,14 @@ This becomes interview material, so keep it honest.
   dropping the quick AI look.
 - 2026-10-21: Surprise (expected risk, now confirmed): Google treats our Classroom
   and Gmail permissions as one grant. Asking Google to cancel one (Disconnect)
-  cancels both; connecting one leaves the other working.
+  cancels both; connecting one leaves the other working. Decision (Saket):
+  Disconnect deletes our key and items for that source, and asks Google to cancel
+  only when the last connection goes.
+- 2026-10-24: Saket's point: outside senders are mostly marketing (checked: the 5
+  recruiter-looking skipped senders were accidental subscriptions), but an
+  external interview call or case-comp round could matter, and other students may
+  get more such mail. Added a free subject safety net: outside bulk/marketing mail
+  is still read if the subject sounds personal ("shortlisted", "interview", "round
+  2", "your application", "results", …). Generic hype words ("deadline", "last
+  chance", "invitation") left out: on Saket's 30 days, the chosen words rescued 3
+  of 126 marketing emails (≈ 3 extra reads a month).

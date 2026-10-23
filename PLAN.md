@@ -134,9 +134,12 @@ sections/calendar views (Stage 6).
         26 other bulk senders, 11 portal receipts. A second run added no
         duplicates (1.3 s). 185 reads ≈ 315K tokens, so the first read-through
         will take ~2 days of free allowance (expected; the queue handles it).
-        **For Saket to check:** a few bulk-skipped senders look recruitment-
-        related (jobs2web.com ×2, mercer.com, sc.com, hiring.talentsjobs.in);
-        confirm none held a real deadline.
+        Saket checked the recruitment-looking skipped senders (jobs2web.com,
+        mercer.com, sc.com, hiring.talentsjobs.in): accidental subscriptions,
+        nothing important. **Added 2026-10-24:** subject safety net for outside
+        senders (see decision log; 3 of 126 marketing emails rescued in 30 days;
+        2 queued emails moved to "to read"), and Gmail's 403 "rate limit" now
+        waits and retries instead of failing the sync.
       - **6c. Fetch + filter** (`lib/gmail.ts`), run by the existing 30-minute
         background job and when the site is opened: list emails since the last
         check (first connect: the **last 14 days**), read only their headers, then
