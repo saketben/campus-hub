@@ -183,7 +183,7 @@ sections/calendar views (Stage 6).
       confidence shows as "Possible deadline: confirm?". A daily per-student cap
       stops runaway cost.
 
-      **Draft plan (2026-10-24, awaiting Saket's approval).** Ends with items
+      **Plan approved by Saket 2026-10-27, all six suggested decisions.** Ends with items
       from Saket's real emails and announcements on the live home page.
 
       **How it works, in plain words.** A new "reader" (`lib/read-queue.ts`) picks
