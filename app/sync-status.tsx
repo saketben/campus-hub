@@ -23,6 +23,7 @@ export function SyncStatus({ lastSyncedAt, sources }: { lastSyncedAt: string | n
   const router = useRouter();
   const [updating, setUpdating] = useState(true);
   const [failed, setFailed] = useState<Source[]>([]);
+  const [reading, setReading] = useState(false);
   const key = sources.join(",");
 
   useEffect(() => {
@@ -37,12 +38,23 @@ export function SyncStatus({ lastSyncedAt, sources }: { lastSyncedAt: string | n
             .then(({ result }) => result as string)
             .catch(() => "failed"),
         ),
-      ).then((results) => {
-        if (cancelled) return;
-        if (results.some((r) => r === "synced" || r === "needs_reconnect")) router.refresh();
-        setFailed(list.filter((_, i) => results[i] === "failed"));
-        setUpdating(false);
-      });
+      )
+        .then(async (results) => {
+          if (cancelled) return;
+          if (results.some((r) => r === "synced" || r === "needs_reconnect")) router.refresh();
+          setFailed(list.filter((_, i) => results[i] === "failed"));
+          // Then the AI reads a few of the newest waiting messages (step 7).
+          setReading(true);
+          const { read } = await fetch("/api/read", { method: "POST" })
+            .then((res) => res.json())
+            .catch(() => ({ read: 0 }));
+          if (!cancelled && read > 0) router.refresh();
+        })
+        .finally(() => {
+          if (cancelled) return;
+          setUpdating(false);
+          setReading(false);
+        });
     };
     const onReturn = () => document.visibilityState === "visible" && check();
 
@@ -56,7 +68,9 @@ export function SyncStatus({ lastSyncedAt, sources }: { lastSyncedAt: string | n
 
   return (
     <p className="text-xs text-zinc-500" aria-live="polite">
-      {updating
+      {reading
+        ? "Reading new messages…"
+        : updating
         ? `Updating from ${sources.map((s) => NAMES[s]).join(" and ")}…`
         : failed.length
           ? `Couldn't reach ${failed.map((s) => NAMES[s]).join(" or ")} just now. ${lastSyncedAt ? `Showing what we had ${ago(lastSyncedAt)}.` : ""}`

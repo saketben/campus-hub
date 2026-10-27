@@ -25,23 +25,34 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     : { data: null };
 
   // How many emails the Gmail check has looked at, and what it decided.
-  const countQueue = async (status?: string) => {
-    let query = supabase.from("message_queue").select("message_id", { count: "exact", head: true }).eq("source", "gmail");
-    if (status) query = query.eq("status", status);
+  const countQueue = async (status?: string | string[], source?: string) => {
+    let query = supabase.from("message_queue").select("message_id", { count: "exact", head: true });
+    if (source) query = query.eq("source", source);
+    if (typeof status === "string") query = query.eq("status", status);
+    if (Array.isArray(status)) query = query.in("status", status);
     return (await query).count ?? 0;
   };
   const gmailCounts = gmailStatus?.last_synced_at
-    ? { checked: await countQueue(), waiting: await countQueue("waiting"), skipped: await countQueue("skipped") }
+    ? {
+        checked: await countQueue(undefined, "gmail"),
+        waiting: await countQueue("waiting", "gmail"),
+        skipped: await countQueue("skipped", "gmail"),
+      }
     : null;
+  // How far the AI has got with the student's emails and announcements.
+  const reading =
+    classroomStatus || gmailStatus
+      ? { done: await countQueue(["read", "failed"]), total: await countQueue(["waiting", "read", "failed"]) }
+      : null;
 
-  // Items from ticked courses; dismissed ones are hidden (dismissing arrives in Stage 5).
-  const { data: items } = classroomStatus
-    ? await supabase
-        .from("items")
-        .select("id, type, title, course_name, due_at, all_day, posted_at, details, link")
-        .eq("source", "classroom")
-        .neq("status", "dismissed")
-    : { data: null };
+  // Everything found so far; dismissed ones are hidden (dismissing arrives in step 8).
+  const { data: items } =
+    classroomStatus || gmailStatus
+      ? await supabase
+          .from("items")
+          .select("id, source, source_id, type, title, course_name, sender, due_at, ends_at, all_day, posted_at, details, link, status")
+          .neq("status", "dismissed")
+      : { data: null };
 
   // The ticked courses, shown as "Watching: …" so students can see what's covered.
   const { data: watched } = classroomStatus
@@ -89,7 +100,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           </div>
           {needsAttention && card}
           {gmailNeedsAttention && gmailCard}
-          {classroomStatus && <ItemsList items={items ?? []} watching={(watched ?? []).map((c) => c.course_name)} now={requestTime} />}
+          {(classroomStatus || gmailStatus) && (
+            <ItemsList
+              items={items ?? []}
+              watching={classroomStatus ? (watched ?? []).map((c) => c.course_name) : null}
+              reading={reading}
+              now={requestTime}
+            />
+          )}
           {!needsAttention && card}
           {!gmailNeedsAttention && gmailCard}
         </section>

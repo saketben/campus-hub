@@ -3,13 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncClassroom, type SyncResult } from "@/lib/classroom";
 import { syncGmail } from "@/lib/gmail";
+import { readQueue } from "@/lib/read-queue";
 
 // The background refresh (D1). Supabase Cron calls this every 30 minutes with the
 // CRON_SECRET password; it refreshes every connected student's Classroom and
-// Gmail, a few at a time.
+// Gmail, a few at a time, then lets the AI read what's waiting.
 export const maxDuration = 300;
 
 const AT_A_TIME = 5;
+const READ_UNTIL_SECONDS = 270;
 
 function authorized(request: NextRequest) {
   const expected = Buffer.from(`Bearer ${process.env.CRON_SECRET ?? ""}`);
@@ -19,6 +21,7 @@ function authorized(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const started = Date.now();
 
   // One job per connection: a student with Classroom and Gmail gets two.
   const { data: connections } = await createAdminClient().from("google_tokens").select("user_id, source");
@@ -33,5 +36,9 @@ export async function POST(request: NextRequest) {
   };
   await Promise.all(Array.from({ length: AT_A_TIME }, worker));
 
-  return NextResponse.json(counts);
+  // Then the AI reads waiting emails and announcements with the time that's left
+  // (step 7), stopping ~30 s before Vercel's 300 s limit.
+  const reading = await readQueue({ deadline: started + READ_UNTIL_SECONDS * 1000 });
+
+  return NextResponse.json({ ...counts, reading });
 }

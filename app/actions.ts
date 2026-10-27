@@ -88,12 +88,21 @@ export async function saveCourses(formData: FormData) {
   }
   const { data: unticked } = await admin
     .from("student_courses")
-    .select("course_name")
+    .select("course_id, course_name")
     .eq("user_id", userId)
     .eq("selected", false);
   const names = (unticked ?? []).map((c) => c.course_name as string);
   if (names.length > 0) {
+    // Includes items the AI found in those courses' announcements.
     await admin.from("items").delete().eq("user_id", userId).eq("source", "classroom").in("course_name", names);
+    // Their announcements leave the reading queue (ticking again re-queues them,
+    // and the shared answers make re-reading free).
+    await admin
+      .from("message_queue")
+      .delete()
+      .eq("user_id", userId)
+      .eq("source", "classroom")
+      .in("course_id", (unticked ?? []).map((c) => c.course_id as string));
   }
   // Clearing last_attempt_at lets the home page's check run immediately,
   // instead of waiting out the once-a-minute limit.

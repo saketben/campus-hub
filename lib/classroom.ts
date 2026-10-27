@@ -235,8 +235,14 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
 
     // Remove items that are no longer current (deleted in Classroom, past due, or old).
     // Everything above succeeded, so the fetched list is complete and this is safe.
+    // Items the AI found in announcements are the reader's, not ours: left alone.
     const keep = rows.map((r) => `"${r.source_id}"`).join(",");
-    let stale = admin.from("items").delete().eq("user_id", userId).eq("source", "classroom");
+    let stale = admin
+      .from("items")
+      .delete()
+      .eq("user_id", userId)
+      .eq("source", "classroom")
+      .not("source_id", "like", "announcement:%");
     if (keep) stale = stale.not("source_id", "in", `(${keep})`);
     const { error: deleteError } = await stale;
     if (deleteError) throw new Error(`Removing old items: ${deleteError.message}`);
@@ -261,6 +267,28 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
         .from("message_queue")
         .upsert(queueRows, { onConflict: "user_id,source,message_id", ignoreDuplicates: true });
       if (error) throw new Error(`Queueing announcements: ${error.message}`);
+
+      // A professor edited an announcement after the AI read it: read it again (its
+      // items are replaced, so the professor's update wins).
+      const edited = new Map(fetched.flatMap(({ announcements }) => announcements.map((a) => [a.id, a.updateTime])));
+      const { data: alreadyRead } = await admin
+        .from("message_queue")
+        .select("message_id, read_at")
+        .eq("user_id", userId)
+        .eq("source", "classroom")
+        .eq("status", "read")
+        .in("message_id", queueRows.map((q) => q.message_id));
+      const reread = (alreadyRead ?? [])
+        .filter((q) => q.read_at && Date.parse(edited.get(q.message_id) ?? "") > Date.parse(q.read_at))
+        .map((q) => q.message_id as string);
+      if (reread.length > 0) {
+        await admin
+          .from("message_queue")
+          .update({ status: "waiting", attempts: 0 })
+          .eq("user_id", userId)
+          .eq("source", "classroom")
+          .in("message_id", reread);
+      }
     }
 
     await setStatus({

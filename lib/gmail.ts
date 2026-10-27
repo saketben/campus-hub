@@ -40,6 +40,18 @@ type Envelope = {
 
 const isOrUnder = (domain: string, base: string) => domain === base || domain.endsWith(`.${base}`);
 
+// The student's college domain, from the Gmail address they connected (none for public webmail).
+export function collegeDomainOf(googleEmail: string): string | null {
+  const domain = googleEmail.split("@")[1]?.toLowerCase() ?? "";
+  return domain && !PUBLIC_WEBMAIL.includes(domain) ? domain : null;
+}
+
+// Campus mail: the college's own domain or a placement portal. The AI reads these first.
+export function isCampusSender(sender: string, collegeDomain: string | null) {
+  const domain = sender.split("@")[1] ?? "";
+  return PLACEMENT_PORTALS.some((p) => isOrUnder(domain, p)) || Boolean(collegeDomain && isOrUnder(domain, collegeDomain));
+}
+
 function header(m: Envelope, name: string) {
   return m.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
 }
@@ -57,14 +69,14 @@ export function skipReason(m: Envelope, collegeDomain: string | null): string | 
 
   if (domain === "classroom.google.com") return "classroom notification"; // already synced from Classroom
   if (portal && /^application submitted\b/i.test(header(m, "Subject"))) return "portal receipt"; // free rule
-  if (portal || (collegeDomain && isOrUnder(domain, collegeDomain))) return null;
+  if (isCampusSender(sender, collegeDomain)) return null;
   if (PERSONAL_OUTCOME.test(header(m, "Subject"))) return null; // safety net, see above
   if (MARKETING_SENDERS.some((s) => isOrUnder(domain, s))) return "marketing sender";
   if (header(m, "List-Unsubscribe") || /bulk|list/i.test(header(m, "Precedence"))) return "bulk sender";
   return null; // someone outside writing personally, e.g. a recruiter
 }
 
-async function gmailGet<T>(token: string, path: string): Promise<T> {
+export async function gmailGet<T>(token: string, path: string): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) return (await res.json()) as T;
@@ -148,8 +160,7 @@ export async function syncGmail(userId: string, { force = false } = {}): Promise
       );
     }
 
-    const emailDomain = (tokenRow.google_email as string).split("@")[1]?.toLowerCase() ?? "";
-    const collegeDomain = emailDomain && !PUBLIC_WEBMAIL.includes(emailDomain) ? emailDomain : null;
+    const collegeDomain = collegeDomainOf(tokenRow.google_email as string);
     const rows = envelopes.map((m) => {
       const reason = skipReason(m, collegeDomain);
       return {
