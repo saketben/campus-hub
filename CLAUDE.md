@@ -65,9 +65,10 @@ WhatsApp is out of scope (no usable API for personal accounts).
   calendar from anywhere. Whether to also have one all-in-one Calendar section is
   decided when we build Stage 6.
 - **Category filters (Stage 6, Saket's idea):** checkboxes such as Placements ·
-  Courses & classes · Clubs & committees · Other, so each student chooses what they
-  see. Placements are on by default, pinned and highlighted so they never get lost
-  under club events. Filters only hide, never delete, and say so ("12 club items
+  Courses & classes · Competitions · Clubs & committees · Other, so each student
+  chooses what they see. Placements are on by default, pinned and highlighted so
+  they never get lost under club events. Corporate case competitions are on by
+  default; club items are off by default (Saket, 2026-10-27). Filters only hide, never delete, and say so ("12 club items
   hidden"). Items need to carry who they're from (course, club, committee,
   placement cell) for this and for the Subjects view.
 
@@ -383,6 +384,12 @@ This becomes interview material, so keep it honest.
   2", "your application", "results", …). Generic hype words ("deadline", "last
   chance", "invitation") left out: on Saket's 30 days, the chosen words rescued 3
   of 126 marketing emails (≈ 3 extra reads a month).
+- 2026-10-27: Saket's feedback on category filters (Stage 6): **club items unticked by
+  default**, so placement and academic deadlines are never buried under club events.
+  **Corporate case competitions** (e.g. DS Group TrenDSetter 5.0, sent by the college)
+  count as important, like placements: on by default. Problem found: the AI types
+  them "other", the same as club events, so items need a category the filters can
+  use (AI field or sender rules), decided when building it.
 - 2026-10-24: **Campus first** (Saket): the product is mainly for campus deadlines.
   The AI reads campus and placement-portal emails first, then Classroom
   announcements, and outside emails only with leftover allowance. Outside items
