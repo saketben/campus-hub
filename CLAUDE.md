@@ -394,3 +394,16 @@ This becomes interview material, so keep it honest.
   The AI reads campus and placement-portal emails first, then Classroom
   announcements, and outside emails only with leftover allowance. Outside items
   are still shown (never ignored), just never at campus mail's expense.
+- 2026-11-11: **Extraction test results in one place** (from
+  `feasibility/RESULTS-accuracy.md`; round 2 = the gpt-oss-120b instructions now in
+  use). Test set: 100 hand-labelled messages from Saket's account (85 emails: 75
+  IIM/placement + 10 marketing; plus 15 Classroom announcements). They held **57 real
+  items** in 49 messages (45 in emails, 12 in announcements); 51 held nothing.
+  **Recall: 57/57 (100%)** after review (the script scored 56/57; the one "miss" was
+  found under a different title); round 1 was 56/57 (98%). Placement items 16/16;
+  dates right on every item found, times on 37 of 38. **Items flagged that weren't
+  real: 66** (13 extra splits inside messages with real items, 14 in college messages
+  with nothing to act on, 39 in marketing emails). Marketing senders are skipped by
+  the noise filter before the AI, so a student would see ≈ 27 of them. Round 1 had
+  53. The trade-off is deliberate: missing a real deadline is worse than an extra
+  item to dismiss.
