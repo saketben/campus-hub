@@ -43,15 +43,15 @@ office), voice (Stage 7).
 
 ### Steps (each ends with a commit; Saket checks phone + laptop at 6c and 6f)
 
-- [x] **6a.** Categories in the data.** Use `lib/categories.ts` on every item;
+- [x] **6a. Categories in the data.** Use `lib/categories.ts` on every item;
       a small table for each student's filter choices (Saket runs one SQL file).
-- [x] **6b.** Unstop rule.** Read Unstop's registration confirmations (noise filter
+- [x] **6b. Unstop rule.** Read Unstop's registration confirmations (noise filter
       change), remember registered competitions, hide other Unstop items.
-- [x] **6c.** Navigation + Settings page.** Bottom/top tabs; move the cards to
+- [x] **6c. Navigation + Settings page.** Bottom/top tabs; move the cards to
       Settings; reconnect banner on Home.
-- [x] **6d.** Home order + filter chips.** Pinned placements, Today / This week /
+- [x] **6d. Home order + filter chips.** Pinned placements, Today / This week /
       Later this term, chips with "N hidden".
-- [x] **6e.** Sections + calendar.** Classroom, Gmail, Subjects; List/Calendar switch
+- [x] **6e. Sections + calendar.** Classroom, Gmail, Subjects; List/Calendar switch
       in each (month grid, tap a day).
 - [ ] **6f. Test** on the live site, phone + laptop; update CLAUDE.md + this file.
 
