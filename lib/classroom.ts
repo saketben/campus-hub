@@ -220,12 +220,13 @@ export async function syncClassroom(userId: string, { force = false } = {}): Pro
     if (current) gone = gone.not("course_id", "in", `(${current})`);
     await gone;
 
+    // No status here: new items start "confirmed" (the table's default), and an
+    // item the student dismissed stays dismissed on every later sync.
     const rows = items.map((item) => ({
       ...item,
       user_id: userId,
       source: "classroom",
       confidence: 1,
-      status: "confirmed",
       updated_at: now.toISOString(),
     }));
     if (rows.length > 0) {

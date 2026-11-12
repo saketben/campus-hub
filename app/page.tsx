@@ -45,13 +45,12 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       ? { done: await countQueue(["read", "failed"]), total: await countQueue(["waiting", "read", "failed"]) }
       : null;
 
-  // Everything found so far; dismissed ones are hidden (dismissing arrives in step 8).
+  // Everything found so far, dismissed ones included (the list hides them, with "show").
   const { data: items } =
     classroomStatus || gmailStatus
       ? await supabase
           .from("items")
           .select("id, source, source_id, type, title, course_name, sender, due_at, ends_at, all_day, posted_at, details, link, status")
-          .neq("status", "dismissed")
       : { data: null };
 
   // The ticked courses, shown as "Watching: …" so students can see what's covered.

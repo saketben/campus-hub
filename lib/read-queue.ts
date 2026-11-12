@@ -28,7 +28,7 @@ const MAX_CHARS = 12_000; // ≈ 3,000 tokens: one read stays under Groq's 8,000
 const DAILY_READS_PER_STUDENT = 100; // Saket, 2026-10-27; reused answers don't count
 const MAX_ATTEMPTS = 3;
 const CLAIM_MINUTES = 10; // a read that started longer ago than this was cut off: try it again
-const POSSIBLE_BELOW = 0.8; // lower confidence shows as "Possible deadline: confirm?"
+export const POSSIBLE_BELOW = 0.8; // lower confidence shows as "Possible deadline: confirm?"
 const UNDATED_MATCH_DAYS = 30;
 const UNREADABLE_TITLE = "Couldn't read this email automatically: please check it";
 
@@ -345,20 +345,35 @@ export async function readQueue({
   // Saves one message's items. Rules from Saket's labelling (step 7c).
   async function saveItems(r: Row, f: Fetched, found: ExtractedItem[]) {
     const prefix = itemPrefix(r);
+    // Items the student dismissed (step 8) stay dismissed when a re-read, a reply or
+    // a dated version brings back the same thing.
+    const dismissed: Comparable[] = [];
+    const keepDismissed = (rows: (Comparable & { status: string })[] | null) =>
+      dismissed.push(...(rows ?? []).filter((x) => x.status === "dismissed"));
+
     // A re-read (edited announcement, retry) replaces what this message gave before.
-    await admin.from("items").delete().eq("user_id", r.user_id).eq("source", r.source).like("source_id", `${prefix}%`);
+    const { data: own } = await admin
+      .from("items")
+      .delete()
+      .eq("user_id", r.user_id)
+      .eq("source", r.source)
+      .like("source_id", `${prefix}%`)
+      .select("type, title, due_at, status");
+    keepDismissed(own);
 
     // A real reply that found something replaces the thread's earlier items: the
     // newest message wins (the AI also saw the quoted text). A reply that found
     // nothing ("Noted, thanks") leaves them.
     if (r.source === "gmail" && f.isReply && found.length > 0) {
-      await admin
+      const { data: earlier } = await admin
         .from("items")
         .delete()
         .eq("user_id", r.user_id)
         .eq("source", "gmail")
         .like("source_id", `${r.thread_id}/%`)
-        .lt("posted_at", r.received_at);
+        .lt("posted_at", r.received_at)
+        .select("type, title, due_at, status");
+      keepDismissed(earlier);
     }
 
     const rows = found.map((item, n) => ({
@@ -386,11 +401,11 @@ export async function readQueue({
     const recent = new Date(Date.parse(r.received_at) - UNDATED_MATCH_DAYS * 86_400_000).toISOString();
     const [{ data: sameTime }, { data: recentItems }] = await Promise.all([
       dated.length
-        ? admin.from("items").select("id, type, title, due_at").eq("user_id", r.user_id).in("due_at", dated)
+        ? admin.from("items").select("id, type, title, due_at, status").eq("user_id", r.user_id).in("due_at", dated)
         : Promise.resolve({ data: [] }),
       admin
         .from("items")
-        .select("id, type, title, due_at")
+        .select("id, type, title, due_at, status")
         .eq("user_id", r.user_id)
         .in("type", types)
         .gte("posted_at", recent)
@@ -398,8 +413,12 @@ export async function readQueue({
     ]);
     const existing = [...(sameTime ?? []), ...(recentItems ?? [])];
     const fresh = rows.filter((x) => !existing.some((e) => sameItem(e, x) || datedVersionOf(e, x)));
-    const replaced = existing.filter((e) => fresh.some((x) => datedVersionOf(x, e))).map((e) => e.id as string);
-    if (replaced.length) await admin.from("items").delete().in("id", replaced);
+    const replaced = existing.filter((e) => fresh.some((x) => datedVersionOf(x, e)));
+    keepDismissed(replaced);
+    if (replaced.length) await admin.from("items").delete().in("id", replaced.map((e) => e.id as string));
+    for (const x of fresh) {
+      if (dismissed.some((d) => d.type === x.type && similarTitles(d, x))) x.status = "dismissed";
+    }
     if (fresh.length) {
       const { error } = await admin.from("items").upsert(fresh, { onConflict: "user_id,source,source_id" });
       if (error) throw new Error(`saving items: ${error.message}`);

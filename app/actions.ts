@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { revokeToken } from "@/lib/google";
+import { POSSIBLE_BELOW } from "@/lib/read-queue";
+import { refresh } from "next/cache";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -69,6 +71,26 @@ export async function disconnectClassroom() {
 export async function disconnectGmail() {
   const cancelled = await disconnect(await signedInUserId(), "gmail");
   redirect(`/?gmail=${cancelled ? "disconnected" : "disconnected_kept"}`);
+}
+
+// Confirm or dismiss one item (step 8), or put a dismissed one back as it was
+// ("Possible deadline" again if the AI wasn't sure). Only the student's own items.
+// The card updates itself; refreshPage moves it between groups straight away.
+export async function setItemStatus(itemId: string, choice: "confirm" | "dismiss" | "restore", refreshPage = false) {
+  const userId = await signedInUserId();
+  const admin = createAdminClient();
+  let status: string = choice === "confirm" ? "confirmed" : "dismissed";
+  if (choice === "restore") {
+    const { data: item } = await admin.from("items").select("confidence").eq("id", itemId).eq("user_id", userId).maybeSingle();
+    if (!item) return;
+    status = item.confidence < POSSIBLE_BELOW ? "needs_review" : "confirmed";
+  }
+  await admin
+    .from("items")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", itemId)
+    .eq("user_id", userId);
+  if (refreshPage) refresh();
 }
 
 // Save the student's ticked courses. Items from unticked courses go straight away;

@@ -1,3 +1,5 @@
+import { ItemCardShell } from "./item-card-actions";
+
 type Item = {
   id: string;
   source: string;
@@ -60,18 +62,26 @@ const isUnreadable = (item: Item) => item.source_id?.endsWith("/unreadable") ?? 
 
 function ItemCard({ item, now }: { item: Item; now: number }) {
   const when = whenLabel(item, now);
-  const possible = item.status === "needs_review" && !isUnreadable(item);
+  const mode =
+    item.status === "dismissed"
+      ? "dismissed"
+      : isUnreadable(item)
+        ? "unreadable"
+        : item.status === "needs_review"
+          ? "possible"
+          : "active";
   return (
-    <li className="flex flex-col gap-1 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <p className="flex flex-wrap items-center gap-x-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-        <span className="break-all">{fromLabel(item)}</span>
-        <span className="font-normal normal-case tracking-normal">· {TYPE_NAMES[item.type] ?? item.type}</span>
-      </p>
-      {possible && (
-        <p className="self-start rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          Possible deadline: confirm?
+    <ItemCardShell
+      id={item.id}
+      title={item.title}
+      mode={mode}
+      header={
+        <p className="flex flex-wrap items-center gap-x-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <span className="break-all">{fromLabel(item)}</span>
+          <span className="font-normal normal-case tracking-normal">· {TYPE_NAMES[item.type] ?? item.type}</span>
         </p>
-      )}
+      }
+    >
       <p className="font-medium text-zinc-900 dark:text-zinc-100">{item.title}</p>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         {when ? (
@@ -96,7 +106,7 @@ function ItemCard({ item, now }: { item: Item; now: number }) {
           {item.source === "gmail" ? "Open in Gmail ↗" : "Open in Classroom ↗"}
         </a>
       )}
-    </li>
+    </ItemCardShell>
   );
 }
 
@@ -133,16 +143,23 @@ export function ItemsList({
   // Classroom materials: no date, shown as "recent pre-reads" as before.
   const isMaterial = (i: Item) => i.source_id?.startsWith("material:") ?? false;
   // Still on: not yet due, or (for a session with an end time) not yet over.
-  const upcoming = items
-    .filter((i) => i.due_at && Date.parse(i.ends_at ?? i.due_at) >= now)
-    .sort((a, b) => Date.parse(a.due_at!) - Date.parse(b.due_at!));
-  const unreadable = items.filter(isUnreadable).sort(byPosted);
+  const isUpcoming = (i: Item) => Boolean(i.due_at) && Date.parse(i.ends_at ?? i.due_at!) >= now;
   // Undated: Classroom assignments always; found items only if recent (old ones are noise).
-  const undated = items
-    .filter((i) => !i.due_at && !isMaterial(i) && !isUnreadable(i))
-    .filter((i) => i.source_id?.startsWith("coursework:") || now - Date.parse(i.posted_at ?? "") <= RECENT_UNDATED_DAYS * DAY)
+  const isUndated = (i: Item) =>
+    !i.due_at &&
+    !isMaterial(i) &&
+    !isUnreadable(i) &&
+    (Boolean(i.source_id?.startsWith("coursework:")) || now - Date.parse(i.posted_at ?? "") <= RECENT_UNDATED_DAYS * DAY);
+  // Dismissed items are hidden from the groups, never deleted, and can be put back
+  // (only the ones that would still be showing).
+  const shown = items.filter((i) => i.status !== "dismissed");
+  const dismissed = items
+    .filter((i) => i.status === "dismissed" && (isUpcoming(i) || isUndated(i) || isMaterial(i) || isUnreadable(i)))
     .sort(byPosted);
-  const preReads = items.filter(isMaterial).sort(byPosted);
+  const upcoming = shown.filter(isUpcoming).sort((a, b) => Date.parse(a.due_at!) - Date.parse(b.due_at!));
+  const unreadable = shown.filter(isUnreadable).sort(byPosted);
+  const undated = shown.filter(isUndated).sort(byPosted);
+  const preReads = shown.filter(isMaterial).sort(byPosted);
   const waiting = reading ? reading.total - reading.done : 0;
 
   return (
@@ -159,7 +176,7 @@ export function ItemsList({
             <span className="font-medium text-zinc-900 dark:text-zinc-100">Read so far:</span> {reading.done} of{" "}
             {reading.total} emails and announcements.
             {waiting > 0 &&
-              ` The other ${waiting} will be read ${waiting > 40 ? "over the next day or two" : "within the next few hours"}; newest campus mail first.`}
+              ` The other ${waiting} will be read ${waiting > 100 ? "over the next few days" : waiting > 40 ? "over the next day or two" : "within the next few hours"}; newest campus mail first.`}
           </p>
         )}
       </div>
@@ -172,6 +189,18 @@ export function ItemsList({
       <Group title="No date given" items={undated} now={now} />
       <Group title="Couldn't read: please check these emails" items={unreadable} now={now} />
       <Group title="Recent pre-reads (last 2 weeks)" items={preReads} now={now} />
+      {dismissed.length > 0 && (
+        <details className="flex flex-col gap-3">
+          <summary className="cursor-pointer text-sm text-zinc-600 dark:text-zinc-400">
+            {dismissed.length} dismissed item{dismissed.length === 1 ? "" : "s"} hidden: show
+          </summary>
+          <ul className="mt-3 flex flex-col gap-3">
+            {dismissed.map((item) => (
+              <ItemCard key={item.id} item={item} now={now} />
+            ))}
+          </ul>
+        </details>
+      )}
       <p className="text-xs text-zinc-500">
         This list is put together automatically from your ticked Classroom courses and your campus emails, and it can
         miss things. The timetable isn&apos;t included yet, so keep an eye on that too.

@@ -163,7 +163,7 @@ sections/calendar views (Stage 6).
       the newest emails are read first, the rest as allowance returns, and nothing
       is lost if the allowance runs out mid-sync. Each background run also reads
       only as many as fit in its time limit.
-- [ ] **7. AI reading → items** (Claude). **Reading order (Saket, 2026-10-24,
+- [x] **7. (done 2026-11-12)** AI reading → items** (Claude). **Reading order (Saket, 2026-10-24,
       campus first):** campus + placement-portal emails first (newest first), then
       Classroom announcements, then outside senders only with leftover allowance;
       outside items are still shown. Each email becomes zero or more items
@@ -201,14 +201,14 @@ sections/calendar views (Stage 6).
       allowance, not time, is the real limit. Saket's backlog (≈ 201 emails + 21
       announcements) takes ~2 days, newest campus mail first.
 
-      - [ ] **7a. Database** (Saket runs one SQL file in Supabase):
+      - [x] **7a. Database** (Saket runs one SQL file in Supabase):
         - `items` gets `ends_at` (end time, e.g. "1:45–3:00 PM") and `sender`
           (who the email is from; Stage 6 category filters need it too).
         - `message_queue` gets `reading_since` (so the background job and a page
           open never read the same message twice at once) and `tokens` + `model`
           (what each read cost: real cost numbers for the pilot, and the
           per-student daily cap).
-      - [ ] **7b. The reader** (`lib/read-queue.ts`, tested locally on a handful
+      - [x] **7b. The reader** (`lib/read-queue.ts`, tested locally on a handful
         of Saket's messages before it's switched on):
         - **Order (campus first):** across all students, first everyone's campus
           + placement-portal emails, then Classroom announcements, then outside
@@ -237,7 +237,7 @@ sections/calendar views (Stage 6).
         - **Problems:** a broken answer is retried on the next run; after 3
           tries, or if the email is too long even after cutting, the row becomes
           "failed".
-      - [ ] **7c. The "Found while labelling" rules:**
+      - [x] **7c. The "Found while labelling" rules:**
         - **Replies:** when a message is a real reply (Gmail's In-Reply-To
           marker) in a thread we've already read, its items **replace** the
           thread's earlier items (the newest message wins; the AI also sees the
@@ -260,7 +260,7 @@ sections/calendar views (Stage 6).
           item it didn't just fetch, which would wipe announcement items; it will
           only touch assignments and pre-reads. Unticking a course removes its
           announcement items too.
-      - [ ] **7d. Home page:**
+      - [x] **7d. Home page:**
         - One **"Coming up"** list by date with everything (Classroom
           assignments + email + announcement items): title, date + time (and end
           time), where it's from (course or sender), "Open in Gmail ↗" / "Open in
@@ -281,7 +281,7 @@ sections/calendar views (Stage 6).
           shows within seconds; the rest is left to the background job.
         - Footer text updated: emails and announcements are now included; the
           timetable isn't yet.
-      - [ ] **7e. Test** on the live site, phone + laptop: items from Saket's real
+      - [x] **7e. Test** on the live site, phone + laptop: items from Saket's real
         emails and announcements appear with correct IST dates and working links;
         spot-check ~10 against the inbox; check tokens used per day; update
         CLAUDE.md + PLAN.md.
@@ -299,7 +299,21 @@ sections/calendar views (Stage 6).
       5. Duplicate reminders merged **only when clearly the same** (7c).
       6. Show "Couldn't read this email" items **for campus/portal mail only**
          (outside mail that fails is just counted).
-- [ ] **8. Confirm / dismiss** (Claude). One or two taps on the home list.
+- [x] **7 results.** Tested locally 2026-10-27 (12 messages in 22 s, 14,153 tokens),
+      then live from 2026-11-05 (after adding `GROQ_API_KEY` in Vercel): Saket's whole
+      backlog read by 2026-11-12, **456 read, 0 failed**, 205 skipped by the noise
+      filter; ≈ 1,750 tokens per read. Added on the way: a dated item replaces an
+      undated one for the same thing (Showtime Consulting case); network errors
+      pause a read without using up a try. Surprise: on the IIM wired network,
+      Node's secure connection to Supabase hangs (curl works); the phone hotspot
+      works. Only affects local testing, not the live site.
+- [x] **8. Confirm / dismiss** (Claude, built 2026-11-12). Every card has
+      "Dismiss"; "Possible deadline" cards have "Yes, it's real" + "Not relevant";
+      "Couldn't read" cards have "I've checked it". A dismissed card shrinks to one
+      line with **Undo**; dismissed items are hidden, never deleted, and listed under
+      "N dismissed items hidden: show" with "Put back on my list". A dismissal
+      survives Classroom syncs (checked by script), re-reads, replies and dated
+      versions of the same item. No database change needed.
 - [ ] **9. Test end to end** on phone and laptop; wrap up (logs, tick Stage 5).
 
 Each step ends with a commit.
