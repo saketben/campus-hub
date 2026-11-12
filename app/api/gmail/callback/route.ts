@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const params = request.nextUrl.searchParams;
   const done = (result: string) => {
-    const response = NextResponse.redirect(`${origin}/?gmail=${result}`);
+    const response = NextResponse.redirect(`${origin}/settings?gmail=${result}`);
     response.cookies.delete({ name: "gmail_oauth_state", path: "/api/gmail" });
     return response;
   };

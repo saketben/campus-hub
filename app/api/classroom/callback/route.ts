@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const params = request.nextUrl.searchParams;
   const done = (result: string) => {
-    const response = NextResponse.redirect(`${origin}/?classroom=${result}`);
+    const response = NextResponse.redirect(`${origin}/settings?classroom=${result}`);
     response.cookies.delete({ name: "classroom_oauth_state", path: "/api/classroom" });
     return response;
   };

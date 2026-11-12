@@ -18,7 +18,13 @@ const MAX_EMAILS_PER_SYNC = 1000; // newest first; a 14-day look-back is ~250 fo
 
 // Placement portals: always read (noise filter, 2026-10-16).
 const PLACEMENT_PORTALS = ["edtex.in"];
-// Marketing senders that slip past the bulk-mail check: never read.
+// Competition platforms' updates go only to students who registered for that
+// competition ("Results Out For MinDScan Round! | TrenDSetter 5.0"): always read.
+// Their marketing addresses (below) never are (Saket, 2026-11-12: Unstop mail is
+// spam unless you entered the competition).
+const COMPETITION_UPDATES = ["unstop.events", "unstop.email", "emails.unstop.com"];
+// Marketing senders that slip past the bulk-mail check: never read, even when the
+// subject sounds personal ("Are you in, Saket?").
 const MARKETING_SENDERS = ["unstop.news", "unstop.com"];
 // Safety net (Saket, 2026-10-24): outside senders' bulk or marketing mail is still
 // read when its subject sounds like news about the student personally, e.g. an
@@ -70,8 +76,9 @@ export function skipReason(m: Envelope, collegeDomain: string | null): string | 
   if (domain === "classroom.google.com") return "classroom notification"; // already synced from Classroom
   if (portal && /^application submitted\b/i.test(header(m, "Subject"))) return "portal receipt"; // free rule
   if (isCampusSender(sender, collegeDomain)) return null;
-  if (PERSONAL_OUTCOME.test(header(m, "Subject"))) return null; // safety net, see above
+  if (COMPETITION_UPDATES.some((s) => isOrUnder(domain, s))) return null;
   if (MARKETING_SENDERS.some((s) => isOrUnder(domain, s))) return "marketing sender";
+  if (PERSONAL_OUTCOME.test(header(m, "Subject"))) return null; // safety net, see above
   if (header(m, "List-Unsubscribe") || /bulk|list/i.test(header(m, "Precedence"))) return "bulk sender";
   return null; // someone outside writing personally, e.g. a recruiter
 }

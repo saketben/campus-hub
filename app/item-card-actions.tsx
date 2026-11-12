@@ -15,12 +15,14 @@ export function ItemCardShell({
   id,
   title,
   mode,
+  highlight = false,
   header,
   children,
 }: {
   id: string;
   title: string;
   mode: Mode;
+  highlight?: boolean;
   header: ReactNode;
   children: ReactNode;
 }) {
@@ -39,7 +41,10 @@ export function ItemCardShell({
     });
   };
 
-  const card = "flex flex-col gap-1 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800";
+  // Placements are highlighted so they never get lost (Stage 6).
+  const card = `flex flex-col gap-1 rounded-xl border p-4 ${
+    highlight ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40" : "border-zinc-200 dark:border-zinc-800"
+  }`;
 
   // Just dismissed on this visit: one line, with a way back.
   if (state === "dismissed" && mode !== "dismissed") {

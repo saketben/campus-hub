@@ -65,12 +65,12 @@ async function signedInUserId() {
 
 export async function disconnectClassroom() {
   const cancelled = await disconnect(await signedInUserId(), "classroom");
-  redirect(`/?classroom=${cancelled ? "disconnected" : "disconnected_kept"}`);
+  redirect(`/settings?classroom=${cancelled ? "disconnected" : "disconnected_kept"}`);
 }
 
 export async function disconnectGmail() {
   const cancelled = await disconnect(await signedInUserId(), "gmail");
-  redirect(`/?gmail=${cancelled ? "disconnected" : "disconnected_kept"}`);
+  redirect(`/settings?gmail=${cancelled ? "disconnected" : "disconnected_kept"}`);
 }
 
 // "Delete all my data" (privacy promise): cancel our access at Google, then delete
@@ -96,6 +96,21 @@ export async function deleteMyData() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/?deleted=1");
+}
+
+// Save the filter chips or the List/Calendar switch (Stage 6), then redraw the page.
+export async function saveSettings(change: { hidden?: string[]; view?: "list" | "calendar" }) {
+  const userId = await signedInUserId();
+  const admin = createAdminClient();
+  const { data: current } = await admin.from("student_settings").select("hidden_categories, view").eq("user_id", userId).maybeSingle();
+  const { error } = await admin.from("student_settings").upsert({
+    user_id: userId,
+    hidden_categories: change.hidden ?? current?.hidden_categories ?? ["clubs"],
+    view: change.view ?? current?.view ?? "list",
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(`Saving settings: ${error.message}`);
+  refresh();
 }
 
 // Confirm or dismiss one item (step 8), or put a dismissed one back as it was
@@ -159,5 +174,5 @@ export async function saveCourses(formData: FormData) {
     .eq("user_id", userId)
     .eq("source", "classroom");
 
-  redirect("/?classroom=courses");
+  redirect("/");
 }
