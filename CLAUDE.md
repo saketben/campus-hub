@@ -249,8 +249,8 @@ Update at the end of every session: what was finished, what's next.
   `lib/categories.ts` (from type, sender, title; no AI change), awaiting Saket's
   check. Saket added the pilot test users; the pilot stays on Groq's free tier.
   **Next:** Saket checks the categories draft; then plan Stage 6 (screens: Saket's
-  input). After Stage 5, delete the local test set (`feasibility/secrets/testset/`)
-  and remove the Stage 1 test scripts' Gmail access (Saket's go-ahead first).
+  input). Cleanup done 2026-11-12 (Saket's go-ahead): local test set deleted; the 3 old
+  test-script keys were already expired at Google, files deleted (`client_secret.json` kept).
   Classroom and Gmail access expire 7 days after each reconnect.
 
 ## Decision log
@@ -441,3 +441,16 @@ This becomes interview material, so keep it honest.
   can be put back; a dismissal survives Classroom syncs, re-reads, replies and a
   dated version of the same item. Added a privacy page with "Delete all my data",
   which the privacy rules promised.
+- 2026-11-12: Categories (Saket): **club-run competitions go under Clubs** (off by
+  default); Competitions holds corporate/outside ones. **Unstop mail (incl.
+  TrenDSetter rounds) is spam for most students, unless the student registered
+  for that competition.** Idea for Stage 6: read Unstop's "registration confirmed"
+  emails to learn which competitions a student entered; show Unstop items only
+  for those, hide the rest (hidden, never deleted). Today Unstop items only reach
+  the list through the subject safety net ("round", "results"…).
+- 2026-11-12: Claude's mistake, caught before acting: it first told Saket to
+  remove the test scripts' access at myaccount.google.com/connections, without
+  checking that Google lists access by app name there, and the scripts and the
+  website share one ("Campus Hub (test)"), so that button could have cut off the
+  website too. Instead the scripts' own keys were cancelled directly; they had
+  already expired (7-day test mode).
