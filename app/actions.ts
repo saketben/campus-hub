@@ -73,6 +73,31 @@ export async function disconnectGmail() {
   redirect(`/?gmail=${cancelled ? "disconnected" : "disconnected_kept"}`);
 }
 
+// "Delete all my data" (privacy promise): cancel our access at Google, then delete
+// the student's account. Every table with their rows (items, queue, keys, courses,
+// sync status) is deleted along with it by the database. The shared AI answers
+// hold no student id, so nothing in them points back to this student.
+export async function deleteMyData() {
+  const userId = await signedInUserId();
+  const admin = createAdminClient();
+  const { data: tokens } = await admin.from("google_tokens").select("refresh_token_encrypted").eq("user_id", userId);
+  // Classroom and Gmail are one grant at Google, so one cancel ends both; trying
+  // each key covers a key that has already expired.
+  for (const token of tokens ?? []) {
+    try {
+      await revokeToken(decrypt(token.refresh_token_encrypted));
+      break;
+    } catch {
+      // Expired or already cancelled: try the next one.
+    }
+  }
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw new Error(`Deleting account: ${error.message}`);
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/?deleted=1");
+}
+
 // Confirm or dismiss one item (step 8), or put a dismissed one back as it was
 // ("Possible deadline" again if the AI wasn't sure). Only the student's own items.
 // The card updates itself; refreshPage moves it between groups straight away.

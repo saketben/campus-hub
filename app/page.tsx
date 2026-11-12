@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NEEDS_ANNOUNCEMENTS } from "@/lib/classroom";
 import { signOut } from "./actions";
@@ -11,7 +12,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
-  const { classroom: message, gmail: gmailMessage } = await searchParams;
+  const { classroom: message, gmail: gmailMessage, deleted } = await searchParams;
   // For "in 3 days" labels. This page renders once per request on the server, so reading the clock is fine.
   // eslint-disable-next-line react-hooks/purity
   const requestTime = Date.now();
@@ -112,12 +113,22 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         </section>
       ) : (
         <section className="flex flex-col gap-4">
+          {deleted === "1" && (
+            <p className="rounded-xl border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+              All your data has been deleted and our access at Google cancelled.
+            </p>
+          )}
           <p className="text-zinc-600 dark:text-zinc-400">
             Your assignments, pre-reads and deadlines in one place, gathered automatically.
           </p>
           <GoogleSignIn />
         </section>
       )}
+      <footer className="mt-auto pt-4 text-xs text-zinc-500">
+        <Link href="/privacy" className="underline">
+          Privacy and your data
+        </Link>
+      </footer>
     </main>
   );
 }

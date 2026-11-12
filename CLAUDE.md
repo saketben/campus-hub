@@ -102,7 +102,7 @@ product to show the academic office.**
 - [ ] **4. Timetable + course outlines:** parser + elective/group picker + "my
       classes tomorrow" + session pre-reads from course outlines (depends on the
       academic office)
-- [ ] **5. Gmail:** sync + AI extraction (emails and Classroom announcements) +
+- [x] **5. Gmail:** (done 2026-11-12) sync + AI extraction (emails and Classroom announcements) +
       confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
       shipping.
 - [ ] **6. Views:** sections (Home, Classroom, Gmail, Timetable, Subjects), each with
@@ -235,6 +235,23 @@ Update at the end of every session: what was finished, what's next.
   reading order, shared answers, replies update items, group slots, `ends_at`
   column, Groq daily cap). Queue now: ~201 emails + 21 announcements waiting.
   Gmail access expires ~31 Oct (reconnected 24 Oct), Classroom ~31 Oct.
+- 2026-10-27 to 11-12, session 9: **Stage 5 done.** Step 7 (`lib/read-queue.ts`):
+  the AI reads the queue campus-first, newest first, two lanes (emails on 120b,
+  announcements on 20b), shared answers, reply/duplicate/dated-version rules, a
+  100-reads-per-student daily cap; home page shows "Coming up", "No date given",
+  "Couldn't read", pre-reads and a "Read so far" line. Live from 5 Nov after
+  `GROQ_API_KEY` was added in Vercel; Saket's backlog finished by 12 Nov (456 read,
+  0 failed). Step 8: Dismiss / "Yes, it's real" / "Not relevant" / "I've checked
+  it" on every card, Undo, a "dismissed items hidden: show" list; dismissals
+  survive syncs and re-reads. Also: `/privacy` page (what we read and keep) with
+  **Delete all my data** (cancels at Google, deletes the account; every table
+  follows), linked from the home footer. Draft categories for Stage 6 filters in
+  `lib/categories.ts` (from type, sender, title; no AI change), awaiting Saket's
+  check. Saket added the pilot test users; the pilot stays on Groq's free tier.
+  **Next:** Saket checks the categories draft; then plan Stage 6 (screens: Saket's
+  input). After Stage 5, delete the local test set (`feasibility/secrets/testset/`)
+  and remove the Stage 1 test scripts' Gmail access (Saket's go-ahead first).
+  Classroom and Gmail access expire 7 days after each reconnect.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -407,3 +424,20 @@ This becomes interview material, so keep it honest.
   the noise filter before the AI, so a student would see ≈ 27 of them. Round 1 had
   53. The trade-off is deliberate: missing a real deadline is worse than an extra
   item to dismiss.
+- 2026-10-27: Surprise: on IIM Trichy's wired network, Node's secure connection to
+  Supabase hangs (curl works); a phone hotspot works. Only local testing is
+  affected, never the live site. Connection errors now pause a read without using
+  up one of its 3 tries.
+- 2026-11-05: Surprise: the live site couldn't read anything at first because
+  `GROQ_API_KEY` was only in `.env.local`. Keys must be added in Vercel too (and the
+  site redeployed). Nothing was lost: a failed AI call leaves the email queued.
+- 2026-11-12: **Going live for friends (Saket):** IIM IT can't host the app as
+  Internal, so it stays in Google test mode: Saket adds each student as a test user
+  (max 100) and everyone reconnects every 7 days. The pilot stays on Groq's free
+  tier and grows a few students at a time, to learn usage patterns. Kept the 14-day
+  first look-back (Claude had suggested 7 to save allowance): reading is newest
+  first, so days 8–14 only arrive later, and they can hold deadlines still to come.
+- 2026-11-12: Confirm/dismiss built: dismissed items are hidden, never deleted, and
+  can be put back; a dismissal survives Classroom syncs, re-reads, replies and a
+  dated version of the same item. Added a privacy page with "Delete all my data",
+  which the privacy rules promised.

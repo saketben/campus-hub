@@ -6,7 +6,8 @@ stage's plan.
 
 ## Stage 5: Gmail (and Classroom announcements)
 
-**Status:** approved by Saket (2026-10-12). In progress. Saket will choose the AI
+**Status:** **done 2026-11-12.** Next: Stage 6 (screens), planned with Saket; this file
+is replaced by its plan then. Saket will choose the AI
 model himself (step 5) and tell Claude.
 
 **Goal:** deadlines, events and placement items hidden in emails and Classroom
@@ -314,7 +315,10 @@ sections/calendar views (Stage 6).
       "N dismissed items hidden: show" with "Put back on my list". A dismissal
       survives Classroom syncs (checked by script), re-reads, replies and dated
       versions of the same item. No database change needed.
-- [ ] **9. Test end to end** on phone and laptop; wrap up (logs, tick Stage 5).
+- [x] **9. Test end to end** on phone and laptop; wrap up (logs, tick Stage 5).
+      Done 2026-11-12: Saket checked dismiss live; logs in CLAUDE.md. Also added
+      `/privacy` with "Delete all my data" (tested by script on a throwaway account)
+      and a categories draft for Stage 6 (`lib/categories.ts`).
 
 Each step ends with a commit.
 
