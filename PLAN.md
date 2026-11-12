@@ -6,7 +6,8 @@ stage's plan. (Stage 5's full plan is in Git history, commit 7198e1a.)
 
 ## Stage 6: Views (sections, calendar, category filters)
 
-**Status:** draft 2026-11-12, awaiting Saket's decisions below.
+**Status:** all 7 suggestions approved by Saket 2026-11-12. 6a–6e built and live
+2026-11-12; waiting for Saket to run the 6a SQL file and check phone + laptop.
 
 **Goal:** a student opens the site and sees what matters first (placements,
 then today and this week), can switch any section to a calendar, and can hide
@@ -42,14 +43,32 @@ office), voice (Stage 7).
 
 ### Steps (each ends with a commit; Saket checks phone + laptop at 6c and 6f)
 
-- [ ] **6a. Categories in the data.** Use `lib/categories.ts` on every item;
+- [x] **6a.** Categories in the data.** Use `lib/categories.ts` on every item;
       a small table for each student's filter choices (Saket runs one SQL file).
-- [ ] **6b. Unstop rule.** Read Unstop's registration confirmations (noise filter
+- [x] **6b.** Unstop rule.** Read Unstop's registration confirmations (noise filter
       change), remember registered competitions, hide other Unstop items.
-- [ ] **6c. Navigation + Settings page.** Bottom/top tabs; move the cards to
+- [x] **6c.** Navigation + Settings page.** Bottom/top tabs; move the cards to
       Settings; reconnect banner on Home.
-- [ ] **6d. Home order + filter chips.** Pinned placements, Today / This week /
+- [x] **6d.** Home order + filter chips.** Pinned placements, Today / This week /
       Later this term, chips with "N hidden".
-- [ ] **6e. Sections + calendar.** Classroom, Gmail, Subjects; List/Calendar switch
+- [x] **6e.** Sections + calendar.** Classroom, Gmail, Subjects; List/Calendar switch
       in each (month grid, tap a day).
 - [ ] **6f. Test** on the live site, phone + laptop; update CLAUDE.md + this file.
+
+### Notes from building (2026-11-12)
+
+- **6a:** categories are worked out when a page loads (`lib/views.ts` +
+  `lib/categories.ts`), not stored, so a rule fix applies to every item at once.
+  Only the filter choices are stored (`student_settings`). Until the SQL is run,
+  everyone sees the defaults and tapping a chip doesn't save.
+- **6b, simpler than planned:** Saket's inbox shows Unstop's competition updates
+  come from `updates@unstop.events` / `.email` and `emails.unstop.com` (sent to
+  registered participants), and marketing from `unstop.news`. So: updates are always
+  read, marketing never (even with a personal-sounding subject), and no
+  "registered competitions" table is needed. **To confirm with Saket:** did he
+  register for Reliance T.U.P XII? (Its updates reached him too.) If not, updates
+  also go to followers and the table is needed after all.
+- **6c:** connect/disconnect results now land on Settings; old `/?classroom=…`
+  links redirect there. A first-time student still sees the connect cards on Home.
+- **6e Subjects:** a course shows its Classroom items plus emails whose title names
+  it (full name, or short name like MMM, ISDC, B2B from the term's elective list).
