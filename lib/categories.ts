@@ -34,14 +34,18 @@ export function categoryOf(item: Categorisable, collegeDomain = "iimtrichy.ac.in
     // A corporate competition sent by the placement side is still a competition.
     return COMPETITION_WORDS.test(item.title) ? "competitions" : "placements";
   }
-  if (item.source === "classroom" || COURSE_TYPES.includes(item.type) || has(ACADEMIC_SENDERS)) return "courses";
-  if (COMPETITION_WORDS.test(item.title) || has(COMPETITION_SENDERS)) return "competitions";
-  if (has(OFFICE_SENDERS)) return "other";
+  const courseType = COURSE_TYPES.includes(item.type) && !has(COMPETITION_SENDERS); // a round's "pre-read" on Unstop isn't a course
+  if (item.source === "classroom" || courseType || has(ACADEMIC_SENDERS)) return "courses";
+  if (has(OFFICE_SENDERS)) return COMPETITION_WORDS.test(item.title) ? "competitions" : "other";
   // A campus role address (culturalcommittee@, ecell@, arthaniti@): a club or committee.
-  // Personal addresses (name.x@) are staff or students writing directly: other.
+  // Their competitions stay with them (Saket, 2026-11-12: Rangoli, DataZoids → Clubs).
+  // Personal addresses (name.x@) are staff or students writing directly.
   const [local, domain] = sender.split("@");
   if (domain === collegeDomain && local && !/^[a-z]+\.[a-z]+$/.test(local) && !/^[a-z]+\.[a-z]$/.test(local)) {
     return "clubs";
   }
+  // Everything else that's a competition: corporate ones forwarded by staff
+  // (TrenDSetter, L'Oréal), Unstop rounds, outside organisers.
+  if (COMPETITION_WORDS.test(item.title) || has(COMPETITION_SENDERS)) return "competitions";
   return "other";
 }
