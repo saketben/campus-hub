@@ -4,7 +4,7 @@ import { loadItems, loadSettings, requireStudent, type Item } from "@/lib/views"
 import { AppShell } from "../app-shell";
 import { ItemsView } from "../items-list";
 
-export const metadata = { title: "Subjects · Campus Hub" };
+export const metadata = { title: "Subjects · The Deadline" };
 
 // Short names a course goes by in emails: "MMM_26" → MMM, "ISDC Group 1" → ISDC,
 // "Business to Business Marketing" → B2B (from the term's elective list).

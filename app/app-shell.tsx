@@ -27,7 +27,7 @@ export function AppShell({
       <header className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="text-xl font-semibold">{title}</h1>
-          <span className="text-sm font-medium text-zinc-500">Campus Hub</span>
+          <span className="text-sm font-medium text-zinc-500">The Deadline</span>
         </div>
         {sources.length > 0 && (
           <SyncStatus lastSyncedAt={classroomStatus?.last_synced_at ?? gmailStatus?.last_synced_at ?? null} sources={sources} />

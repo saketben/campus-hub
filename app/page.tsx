@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   if (!user) {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8 sm:py-16">
-        <h1 className="text-xl font-semibold">Campus Hub</h1>
+        <h1 className="text-xl font-semibold">The Deadline</h1>
         {params.deleted === "1" && (
           <p className="rounded-xl border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
             All your data has been deleted and our access at Google cancelled.

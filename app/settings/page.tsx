@@ -5,7 +5,7 @@ import { AppShell } from "../app-shell";
 import { ClassroomCard } from "../classroom-card";
 import { GmailCard } from "../gmail-card";
 
-export const metadata = { title: "Settings · Campus Hub" };
+export const metadata = { title: "Settings · The Deadline" };
 
 // Connections, courses and account (Stage 6). The weekly reconnect happens here;
 // other sections show a banner pointing here when it's due.

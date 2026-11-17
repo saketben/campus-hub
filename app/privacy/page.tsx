@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { deleteMyData } from "../actions";
 
-export const metadata = { title: "Privacy and your data · Campus Hub" };
+export const metadata = { title: "Privacy and your data · The Deadline" };
 
 const heading = "font-semibold text-zinc-900 dark:text-zinc-100";
 
@@ -22,7 +22,7 @@ export default async function Privacy() {
       </header>
 
       <p>
-        Campus Hub is a student project at IIM Tiruchirappalli, in a small pilot. It gathers your deadlines from Google
+        The Deadline is a student project at IIM Tiruchirappalli, in a small pilot. It gathers your deadlines from Google
         Classroom and Gmail so you don&apos;t have to type them in. Here is exactly what that involves.
       </p>
 

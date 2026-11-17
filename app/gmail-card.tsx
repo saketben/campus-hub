@@ -7,7 +7,7 @@ const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   connected: { text: "Gmail connected.", tone: "ok" },
   disconnected: { text: "Gmail disconnected. We deleted your Gmail items and asked Google to cancel our access.", tone: "ok" },
   disconnected_kept: {
-    text: "Gmail disconnected. We deleted your Gmail items and our Gmail key, so Campus Hub can no longer read your email. Google still lists Campus Hub in your account because Classroom is connected.",
+    text: "Gmail disconnected. We deleted your Gmail items and our Gmail key, so The Deadline can no longer read your email. Google still lists The Deadline in your account because Classroom is connected.",
     tone: "ok",
   },
   cancelled: { text: "You cancelled on Google's screen. Gmail wasn't connected.", tone: "warn" },
@@ -45,10 +45,10 @@ export function GmailCard({ status, counts, message }: { status: Status; counts:
             </p>
           </div>
           <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-            <li>Read-only: Campus Hub can never send, delete or change an email.</li>
+            <li>Read-only: The Deadline can never send, delete or change an email.</li>
             <li>
               An AI service (Groq) reads emails that may hold deadlines: from your college, placement
-              portals, and people writing to you directly. It doesn&apos;t keep them. Campus Hub stores only
+              portals, and people writing to you directly. It doesn&apos;t keep them. The Deadline stores only
               what it finds (title, date, link back), never your emails.
             </li>
             <li>Marketing and newsletter emails are skipped without being read.</li>

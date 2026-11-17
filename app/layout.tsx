@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Campus Hub",
+  title: "The Deadline",
   description: "Your assignments, pre-reads and deadlines in one place.",
 };
 

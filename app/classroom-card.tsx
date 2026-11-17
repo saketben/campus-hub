@@ -14,7 +14,7 @@ const MESSAGES: Record<string, { text: string; tone: "ok" | "warn" }> = {
   courses: { text: "Courses saved. Your list now shows only the courses you picked.", tone: "ok" },
   disconnected: { text: "Classroom disconnected. We deleted your Classroom items and asked Google to cancel our access.", tone: "ok" },
   disconnected_kept: {
-    text: "Classroom disconnected. We deleted your Classroom items and our Classroom key, so Campus Hub can no longer read Classroom. Google still lists Campus Hub in your account because Gmail is connected.",
+    text: "Classroom disconnected. We deleted your Classroom items and our Classroom key, so The Deadline can no longer read Classroom. Google still lists The Deadline in your account because Gmail is connected.",
     tone: "ok",
   },
   cancelled: { text: "You cancelled on Google's screen. Nothing was connected.", tone: "warn" },
@@ -53,14 +53,14 @@ export function ClassroomCard({ status, message }: { status: Status; message?: s
             </p>
           </div>
           <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-            <li>Read-only: Campus Hub can never post, submit or change anything.</li>
+            <li>Read-only: The Deadline can never post, submit or change anything.</li>
             <li>
               Course announcements are read by an AI service (Groq) to find deadlines. It doesn&apos;t keep
-              them; Campus Hub stores only what it finds, with a link back.
+              them; The Deadline stores only what it finds, with a link back.
             </li>
             <li>
               Google&apos;s screen says &ldquo;course work <strong>and grades</strong>&rdquo;. That&apos;s
-              Google&apos;s wording for assignments. Campus Hub never reads or stores your grades.
+              Google&apos;s wording for assignments. The Deadline never reads or stores your grades.
             </li>
             <li>
               Google will warn that the app isn&apos;t verified yet. It&apos;s a pilot; choose
@@ -93,7 +93,7 @@ export function ClassroomCard({ status, message }: { status: Status; message?: s
           <div>
             <p className="font-medium text-zinc-900 dark:text-zinc-100">Reconnect once for course announcements</p>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Campus Hub can now also find deadlines in your courses&apos; announcements (pre-reads by session,
+              The Deadline can now also find deadlines in your courses&apos; announcements (pre-reads by session,
               guest lectures). Google needs your OK for that one extra read-only permission. Your assignments
               keep updating meanwhile.
             </p>
