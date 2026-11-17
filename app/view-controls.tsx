@@ -44,8 +44,7 @@ export function ViewControls({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Show these categories">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Show these categories">
           {ORDER.map((c) => {
             const on = !chips.includes(c);
             return (
@@ -65,7 +64,11 @@ export function ViewControls({
               </button>
             );
           })}
-        </div>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-zinc-500" aria-live="polite">
+          {pending ? "Saving…" : hiddenText ? `Hidden by your filters: ${hiddenText}. Tap a category to show it.` : ""}
+        </p>
         <div className="flex shrink-0 rounded-lg border border-zinc-300 p-0.5 text-sm dark:border-zinc-700" role="group" aria-label="View">
           {(["list", "calendar"] as const).map((v) => (
             <button
@@ -83,9 +86,6 @@ export function ViewControls({
           ))}
         </div>
       </div>
-      <p className="text-xs text-zinc-500" aria-live="polite">
-        {pending ? "Saving…" : hiddenText ? `Hidden by your filters: ${hiddenText}. Tap a category to show it.` : ""}
-      </p>
     </div>
   );
 }

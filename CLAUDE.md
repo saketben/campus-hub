@@ -105,7 +105,7 @@ product to show the academic office.**
 - [x] **5. Gmail:** (done 2026-11-12) sync + AI extraction (emails and Classroom announcements) +
       confirm/dismiss. Measure accuracy against ~100 hand-labelled emails before
       shipping.
-- [ ] **6. Views:** sections (Home, Classroom, Gmail, Timetable, Subjects), each with
+- [x] **6. Views:** (done 2026-11-17; Timetable tab waits for Stage 4) sections (Home, Classroom, Gmail, Timetable, Subjects), each with
       a list/calendar toggle and category filters (placements pinned and on by
       default); group far-off items as "Later this term"
 - [ ] **7. Voice:** dictate to add or correct items (only if time allows)
@@ -252,6 +252,16 @@ Update at the end of every session: what was finished, what's next.
   input). Cleanup done 2026-11-12 (Saket's go-ahead): local test set deleted; the 3 old
   test-script keys were already expired at Google, files deleted (`client_secret.json` kept).
   Classroom and Gmail access expire 7 days after each reconnect.
+- 2026-11-12 to 11-17, session 9 (cont.): **Stage 6 done** (see PLAN.md). Tabs (Home,
+  Classroom, Gmail, Subjects, Settings; bottom bar on phones), Settings page with the
+  connect cards + reconnect banner elsewhere, category chips saved per student
+  (`student_settings`, clubs off by default), List/Calendar switch (month grid),
+  Home order (pinned "Placements, next 7 days", Today, This week, folded "Later this
+  term"), Subjects (course + emails naming it). Unstop: only competitions the
+  student registered for (learnt from confirmation emails). Claude tested the
+  screens itself on localhost (Saket's request).
+  **Next:** Saket reconnects Google (Gmail expired 12 Nov), then onboards friends.
+  Stage 4 (timetable) when the academic office provides a feed.
 
 ## Decision log
 One line per decision, cut, or surprise, with the date and the reason.
@@ -454,3 +464,11 @@ This becomes interview material, so keep it honest.
   website share one ("Campus Hub (test)"), so that button could have cut off the
   website too. Instead the scripts' own keys were cancelled directly; they had
   already expired (7-day test mode).
+- 2026-11-17: Unstop's update address writes to followers too (Saket got Reliance
+  T.U.P XII updates without registering), so "registered only" needs a record of
+  sign-ups: kept as skipped queue rows ("registered: <competition>") from Unstop's
+  confirmation emails, no new table. Saket's one sign-up found: TrenDSetter 5.0.
+- 2026-11-17: Saket asked Claude to test screens itself. Google-only sign-in and
+  disabled email logins mean Claude can't sign in as Saket; it tests on localhost
+  with a throwaway account (admin key + one-time sign-in token, copy of Saket's
+  items) and deletes it afterwards. Found and fixed a squeezed chip row on phones.

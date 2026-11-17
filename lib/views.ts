@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NEEDS_ANNOUNCEMENTS } from "@/lib/classroom";
 import { categoryOf, type Category } from "@/lib/categories";
-import { collegeDomainOf } from "@/lib/gmail";
+import { collegeDomainOf, isCompetitionPlatform, namesCompetition } from "@/lib/gmail";
 
 // What every section page needs (Stage 6): who's signed in, the connections, the
 // student's view choices, and their items with a category each. The sections are
@@ -24,6 +24,8 @@ export type Item = {
   link: string | null;
   status: string;
   category: Category;
+  // From a competition platform about a competition the student never entered.
+  unregistered: boolean;
 };
 
 export type Settings = { hidden: Category[]; view: "list" | "calendar" };
@@ -73,11 +75,23 @@ export async function loadSettings(supabase: Student["supabase"]): Promise<Setti
 
 export async function loadItems(student: Student): Promise<Item[]> {
   if (!student.user) return [];
-  const { data } = await student.supabase
-    .from("items")
-    .select("id, source, source_id, type, title, course_name, sender, due_at, ends_at, all_day, posted_at, details, link, status");
+  const [{ data }, { data: registrations }] = await Promise.all([
+    student.supabase
+      .from("items")
+      .select("id, source, source_id, type, title, course_name, sender, due_at, ends_at, all_day, posted_at, details, link, status"),
+    // Competitions the student entered (see lib/gmail.ts, COMPETITION_UPDATES).
+    student.supabase.from("message_queue").select("skip_reason").like("skip_reason", "registered: %"),
+  ]);
+  const registered = (registrations ?? []).map((r) => String(r.skip_reason).slice("registered: ".length));
   const collegeDomain = collegeDomainOf(String(student.user.email ?? "")) ?? undefined;
-  return (data ?? []).map((item) => ({ ...item, category: categoryOf(item, collegeDomain) }) as Item);
+  return (data ?? []).map(
+    (item) =>
+      ({
+        ...item,
+        category: categoryOf(item, collegeDomain),
+        unregistered: Boolean(item.sender && isCompetitionPlatform(item.sender) && !namesCompetition(item.title, registered)),
+      }) as Item,
+  );
 }
 
 // How far the AI has got with the student's emails and announcements.

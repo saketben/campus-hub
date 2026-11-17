@@ -6,8 +6,8 @@ stage's plan. (Stage 5's full plan is in Git history, commit 7198e1a.)
 
 ## Stage 6: Views (sections, calendar, category filters)
 
-**Status:** all 7 suggestions approved by Saket 2026-11-12. 6a–6e built and live
-2026-11-12; waiting for Saket to run the 6a SQL file and check phone + laptop.
+**Status:** **done 2026-11-17.** All 7 suggestions approved by Saket 2026-11-12; built,
+live, SQL run by Saket, tested by Claude (Saket asked Claude to test itself).
 
 **Goal:** a student opens the site and sees what matters first (placements,
 then today and this week), can switch any section to a calendar, and can hide
@@ -53,7 +53,13 @@ office), voice (Stage 7).
       Later this term, chips with "N hidden".
 - [x] **6e. Sections + calendar.** Classroom, Gmail, Subjects; List/Calendar switch
       in each (month grid, tap a day).
-- [ ] **6f. Test** on the live site, phone + laptop; update CLAUDE.md + this file.
+- [x] **6f. Test** (Claude, 2026-11-17, localhost, throwaway account with a copy of
+      Saket's items, deleted after): phone 375px + laptop 1280px; chips save to the
+      account; calendar (Nov 2026 starts Sunday, today ringed, amber dot = placement,
+      tap a day shows its cards); Subjects; Settings; reconnect banner + tab dot;
+      pinned "Placements, next 7 days" (amber); no sideways scroll, no console
+      errors. Fixed: chips were squeezed into one column by the List/Calendar
+      switch (moved to its own row); Gmail card said "appearing here".
 
 ### Notes from building (2026-11-12)
 
@@ -66,8 +72,14 @@ office), voice (Stage 7).
   registered participants), and marketing from `unstop.news`. So: updates are always
   read, marketing never (even with a personal-sounding subject), and no
   "registered competitions" table is needed. **To confirm with Saket:** did he
-  register for Reliance T.U.P XII? (Its updates reached him too.) If not, updates
-  also go to followers and the table is needed after all.
+  register for Reliance T.U.P XII? **No (2026-11-17)**, so updates also go to
+  followers. Built the check without a table: Unstop confirmation emails
+  ("Request accepted … for <competition> being organized by …") are kept as
+  skipped queue rows with `skip_reason` "registered: <competition>" (searched 180
+  days back on every sync); updates are read only if they name one, and items from
+  other Unstop competitions sit in a folded "From competitions you haven't
+  registered for" group. Saket's one sign-up found so far: TrenDSetter 5.0 –
+  Marketing Track (30 Oct); it is recorded after he reconnects Gmail.
 - **6c:** connect/disconnect results now land on Settings; old `/?classroom=…`
   links redirect there. A first-time student still sees the connect cards on Home.
 - **6e Subjects:** a course shows its Classroom items plus emails whose title names

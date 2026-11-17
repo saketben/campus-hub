@@ -11,6 +11,7 @@ import type { SyncResult } from "@/lib/classroom";
 
 const API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const FIRST_LOOK_BACK_DAYS = 14; // first connect (Saket, 2026-10-17)
+const REGISTRATION_LOOK_BACK_DAYS = 180; // competition sign-ups
 const OVERLAP_MINUTES = 60; // re-list the last hour each time, so late arrivals aren't missed
 const MIN_SECONDS_BETWEEN_SYNCS = 60;
 const ENVELOPES_AT_A_TIME = 10;
@@ -18,11 +19,56 @@ const MAX_EMAILS_PER_SYNC = 1000; // newest first; a 14-day look-back is ~250 fo
 
 // Placement portals: always read (noise filter, 2026-10-16).
 const PLACEMENT_PORTALS = ["edtex.in"];
-// Competition platforms' updates go only to students who registered for that
-// competition ("Results Out For MinDScan Round! | TrenDSetter 5.0"): always read.
-// Their marketing addresses (below) never are (Saket, 2026-11-12: Unstop mail is
-// spam unless you entered the competition).
-const COMPETITION_UPDATES = ["unstop.events", "unstop.email", "emails.unstop.com"];
+// Competition platforms (Saket, 2026-11-12: Unstop mail is spam unless you entered
+// that competition). Their update addresses write to followers too (Saket got
+// Reliance T.U.P XII updates without registering), so an update is read only when
+// it names a competition the student registered for. Registrations are learnt from
+// the platform's confirmation emails and kept as skipped queue rows,
+// skip_reason "registered: <competition>" (no extra table needed).
+const COMPETITION_UPDATES = ["unstop.events", "unstop.email"];
+const COMPETITION_ACCOUNT = ["emails.unstop.com"];
+const REGISTERED_PREFIX = "registered: ";
+const REGISTRATION_PATTERNS = [
+  /request accepted by .+? for (.+?) being organi[sz]ed by/i, // joined a team
+  /successfully registered (?:for|in) (.+?)(?:!|$| being organi[sz]ed)/i,
+  /registration (?:is )?(?:confirmed|successful)[^|:]*[|:]\s*(.+)$/i,
+  /you(?:'re| are) registered (?:for|in) (.+?)(?:!|$)/i,
+];
+
+// The competition a confirmation email is about, or null if it isn't one.
+export function registrationName(subject: string): string | null {
+  for (const p of REGISTRATION_PATTERNS) {
+    const name = subject.match(p)?.[1]?.trim();
+    if (name) return name;
+  }
+  return null;
+}
+
+const plain = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
+// Does this text name one of the student's competitions? Compared on the name's
+// first two words ("TrenDSetter 5.0- Marketing Track" → "trendsetter 5"), so a
+// round's own title still matches.
+export function namesCompetition(text: string, registered: string[]) {
+  const t = plain(text);
+  return registered.some((name) => {
+    const key = plain(name).trim().split(" ").slice(0, 2).join(" ");
+    return key.length >= 4 && t.includes(` ${key} `);
+  });
+}
+export const isCompetitionPlatform = (sender: string) =>
+  [...COMPETITION_UPDATES, ...COMPETITION_ACCOUNT, "unstop.news", "unstop.com"].some((s) =>
+    isOrUnder(sender.split("@")[1] ?? "", s),
+  );
+
+// The competitions a student registered for, from their queue.
+export async function registeredCompetitions(admin: ReturnType<typeof createAdminClient>, userId: string) {
+  const { data } = await admin
+    .from("message_queue")
+    .select("skip_reason")
+    .eq("user_id", userId)
+    .like("skip_reason", `${REGISTERED_PREFIX}%`);
+  return (data ?? []).map((r) => (r.skip_reason as string).slice(REGISTERED_PREFIX.length));
+}
 // Marketing senders that slip past the bulk-mail check: never read, even when the
 // subject sounds personal ("Are you in, Saket?").
 const MARKETING_SENDERS = ["unstop.news", "unstop.com"];
@@ -68,15 +114,22 @@ function senderAddress(m: Envelope) {
 }
 
 // The noise filter. Returns null to read the email, or the reason it's skipped.
-export function skipReason(m: Envelope, collegeDomain: string | null): string | null {
+export function skipReason(m: Envelope, collegeDomain: string | null, registered: string[] = []): string | null {
   const sender = senderAddress(m);
   const domain = sender.split("@")[1] ?? "";
   const portal = PLACEMENT_PORTALS.some((p) => isOrUnder(domain, p));
+  const subject = header(m, "Subject");
 
   if (domain === "classroom.google.com") return "classroom notification"; // already synced from Classroom
-  if (portal && /^application submitted\b/i.test(header(m, "Subject"))) return "portal receipt"; // free rule
+  if (portal && /^application submitted\b/i.test(subject)) return "portal receipt"; // free rule
   if (isCampusSender(sender, collegeDomain)) return null;
-  if (COMPETITION_UPDATES.some((s) => isOrUnder(domain, s))) return null;
+  if (COMPETITION_ACCOUNT.some((s) => isOrUnder(domain, s))) {
+    const name = registrationName(subject);
+    if (name) return `${REGISTERED_PREFIX}${name}`.slice(0, 200);
+  }
+  if (COMPETITION_UPDATES.some((s) => isOrUnder(domain, s))) {
+    return namesCompetition(subject, registered) ? null : "competition not registered for";
+  }
   if (MARKETING_SENDERS.some((s) => isOrUnder(domain, s))) return "marketing sender";
   if (PERSONAL_OUTCOME.test(header(m, "Subject"))) return null; // safety net, see above
   if (header(m, "List-Unsubscribe") || /bulk|list/i.test(header(m, "Precedence"))) return "bulk sender";
@@ -150,6 +203,14 @@ export async function syncGmail(userId: string, { force = false } = {}): Promise
       pageToken = page.nextPageToken ?? "";
     } while (pageToken && ids.length < MAX_EMAILS_PER_SYNC);
 
+    // Also look further back for competition registrations (one cheap search), so
+    // updates about a competition entered months ago are still recognised.
+    {
+      const q = encodeURIComponent(`from:unstop.com newer_than:${REGISTRATION_LOOK_BACK_DAYS}d ("request accepted" OR registered OR registration)`);
+      const page = await gmailGet<{ messages?: { id: string }[] }>(token, `/messages?q=${q}&maxResults=50`);
+      ids.push(...(page.messages ?? []).map((m) => m.id).filter((id) => !ids.includes(id)));
+    }
+
     // Skip ones already in the queue (the overlap), then fetch envelopes only.
     const { data: known } = ids.length
       ? await admin.from("message_queue").select("message_id").eq("user_id", userId).eq("source", "gmail").in("message_id", ids)
@@ -168,8 +229,16 @@ export async function syncGmail(userId: string, { force = false } = {}): Promise
     }
 
     const collegeDomain = collegeDomainOf(tokenRow.google_email as string);
+    // Competitions entered so far, including confirmations in this very batch.
+    const registered = [
+      ...(await registeredCompetitions(admin, userId)),
+      ...envelopes
+        .filter((m) => COMPETITION_ACCOUNT.some((s) => isOrUnder(senderAddress(m).split("@")[1] ?? "", s)))
+        .map((m) => registrationName(header(m, "Subject")))
+        .filter((n): n is string => Boolean(n)),
+    ];
     const rows = envelopes.map((m) => {
-      const reason = skipReason(m, collegeDomain);
+      const reason = skipReason(m, collegeDomain, registered);
       return {
         user_id: userId,
         source: "gmail",

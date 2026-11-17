@@ -83,7 +83,7 @@ export function GmailCard({ status, counts, message }: { status: Status; counts:
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             <span className="font-medium text-zinc-900 dark:text-zinc-100">Gmail connected.</span>{" "}
             {counts
-              ? `Checked ${counts.checked} emails: ${counts.waiting} to read for deadlines, ${counts.skipped} skipped (notifications, marketing, newsletters). Items from them will start appearing here soon.`
+              ? `Checked ${counts.checked} emails: ${counts.waiting} to read for deadlines, ${counts.skipped} skipped (notifications, marketing, newsletters). Items from them will start appearing on Home soon.`
               : "Checking your emails…"}
           </p>
           <form action={disconnectGmail}>

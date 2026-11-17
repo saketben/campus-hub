@@ -180,7 +180,10 @@ export function ItemsView({
   // Filters only hide, and say how many (trust rule). "Couldn't read" emails are
   // never hidden: we don't know what's in them.
   const hidden = (i: Item) => settings.hidden.includes(i.category) && !isUnreadable(i);
-  const active = items.filter((i) => i.status !== "dismissed" && relevant(i));
+  const active = items.filter((i) => i.status !== "dismissed" && relevant(i) && !i.unregistered);
+  // Competition-platform updates about competitions the student never entered
+  // (Saket, 2026-11-12): hidden, never deleted, with a way to see them.
+  const unregistered = items.filter((i) => i.status !== "dismissed" && relevant(i) && i.unregistered).sort(byPosted);
   const hiddenCounts: Partial<Record<Category, number>> = {};
   for (const i of active.filter(hidden)) hiddenCounts[i.category] = (hiddenCounts[i.category] ?? 0) + 1;
   const shown = active.filter((i) => !hidden(i));
@@ -250,6 +253,7 @@ export function ItemsView({
           <Group title="Recent pre-reads (last 2 weeks)" items={preReads} now={now} />
         </>
       )}
+      <Folded title="From competitions you haven't registered for (hidden)" items={unregistered} now={now} />
       <Folded title="Dismissed (hidden, can be put back)" items={dismissed} now={now} />
       <p className="text-xs text-zinc-500">
         This list is put together automatically from your ticked Classroom courses and your campus emails, and it can
