@@ -473,7 +473,7 @@ This becomes interview material, so keep it honest.
   with a throwaway account (admin key + one-time sign-in token, copy of Saket's
   items) and deletes it afterwards. Found and fixed a squeezed chip row on phones.
 - 2026-11-18: **The app's name is "The Deadline"** (Saket). Renamed everywhere on the
-  site (was "Campus Hub", a working name). Still to rename outside the code: the
-  Google consent screen's app name ("Campus Hub (test)", Google Cloud → Branding).
+  site (was "Campus Hub", a working name). Saket renamed the Google consent
+  screen's app name too (Google Cloud → Branding), the same day.
   The address stays campushub-iimt.vercel.app for now: changing it means updating
   Google's allowed origins and redirect addresses, so it waits for a real domain.
