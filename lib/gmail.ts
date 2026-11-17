@@ -204,19 +204,37 @@ export async function syncGmail(userId: string, { force = false } = {}): Promise
     } while (pageToken && ids.length < MAX_EMAILS_PER_SYNC);
 
     // Also look further back for competition registrations (one cheap search), so
-    // updates about a competition entered months ago are still recognised.
-    {
-      const q = encodeURIComponent(`from:unstop.com newer_than:${REGISTRATION_LOOK_BACK_DAYS}d ("request accepted" OR registered OR registration)`);
-      const page = await gmailGet<{ messages?: { id: string }[] }>(token, `/messages?q=${q}&maxResults=50`);
-      ids.push(...(page.messages ?? []).map((m) => m.id).filter((id) => !ids.includes(id)));
-    }
+    // updates about a competition entered months ago are still recognised. Ones
+    // already queued are looked at again unless already recorded as a sign-up
+    // (emails queued before this rule existed were filed as marketing).
+    const signUpQuery = encodeURIComponent(
+      `from:${COMPETITION_ACCOUNT.join(" OR from:")} newer_than:${REGISTRATION_LOOK_BACK_DAYS}d ("request accepted" OR registered OR registration)`,
+    );
+    const signUpIds = ((await gmailGet<{ messages?: { id: string }[] }>(token, `/messages?q=${signUpQuery}&maxResults=50`)).messages ?? []).map(
+      (m) => m.id,
+    );
+    ids.push(...signUpIds.filter((id) => !ids.includes(id)));
 
     // Skip ones already in the queue (the overlap), then fetch envelopes only.
     const { data: known } = ids.length
-      ? await admin.from("message_queue").select("message_id").eq("user_id", userId).eq("source", "gmail").in("message_id", ids)
+      ? await admin.from("message_queue").select("message_id, skip_reason").eq("user_id", userId).eq("source", "gmail").in("message_id", ids)
       : { data: [] };
     const knownIds = new Set((known ?? []).map((k) => k.message_id as string));
+    const recorded = new Set((known ?? []).filter((k) => String(k.skip_reason).startsWith(REGISTERED_PREFIX)).map((k) => k.message_id as string));
+    const recheck = signUpIds.filter((id) => knownIds.has(id) && !recorded.has(id));
     const newIds = ids.filter((id) => !knownIds.has(id));
+    for (const id of recheck) {
+      const m = await gmailGet<Envelope>(token, `/messages/${id}?format=metadata&metadataHeaders=Subject`);
+      const name = registrationName(header(m, "Subject"));
+      if (name) {
+        await admin
+          .from("message_queue")
+          .update({ status: "skipped", skip_reason: `${REGISTERED_PREFIX}${name}`.slice(0, 200) })
+          .eq("user_id", userId)
+          .eq("source", "gmail")
+          .eq("message_id", id);
+      }
+    }
 
     const envelopes: Envelope[] = [];
     const headers = ["From", "Subject", "List-Unsubscribe", "Precedence"].map((h) => `metadataHeaders=${h}`).join("&");
